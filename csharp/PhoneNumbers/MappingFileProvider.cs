@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -30,10 +31,10 @@ namespace PhoneNumbers
     */
     public class MappingFileProvider
     {
-        private static readonly Dictionary<string, string> LocaleNormalizationMap;
-        private List<HashSet<string>> availableLanguages;
-        private int[] countryCallingCodes;
         private int numOfEntries;
+        private int[] countryCallingCodes;
+        private List<HashSet<string>> availableLanguages;
+        private static readonly Dictionary<string, string> LocaleNormalizationMap;
 
         static MappingFileProvider()
         {
@@ -72,6 +73,47 @@ namespace PhoneNumbers
             }
         }
 
+        public void ReadExternal(BinaryReader objectInput)
+        {
+            numOfEntries = objectInput.ReadInt32();
+            if (countryCallingCodes == null || countryCallingCodes.Length < numOfEntries)
+            {
+                countryCallingCodes = new int[numOfEntries];
+            }
+            if (availableLanguages == null)
+            {
+                availableLanguages = new List<HashSet<string>>();
+            }
+            for (var i = 0; i < numOfEntries; i++)
+            {
+                countryCallingCodes[i] = objectInput.ReadInt32();
+                var numOfLangs = objectInput.ReadInt32();
+                var setOfLangs = new HashSet<string>();
+                for (var j = 0; j < numOfLangs; j++)
+                {
+                    setOfLangs.Add(objectInput.ReadString());
+                }
+                availableLanguages.Add(setOfLangs);
+            }
+        }
+
+        public void WriteExternal(BinaryWriter objectOutput)
+        {
+            objectOutput.Write(numOfEntries);
+            for (var i = 0; i < numOfEntries; i++)
+            {
+                objectOutput.Write(countryCallingCodes[i]);
+                var setOfLangs = availableLanguages[i];
+                var numOfLangs = setOfLangs.Count;
+                objectOutput.Write(numOfLangs);
+                foreach (var lang in setOfLangs)
+                {
+                    objectOutput.Write(lang);
+                }
+            }
+        }
+
+
         /**
          * Returns a string representing the data in this class. The string contains one line for each
          * country calling code. The country calling code is followed by a '|' and then a list of
@@ -109,10 +151,14 @@ namespace PhoneNumbers
         public string GetFileName(int countryCallingCode, string language, string script, string region)
         {
             if (language.Length == 0)
+            {
                 return "";
+            }
             var index = Array.BinarySearch(countryCallingCodes, countryCallingCode);
             if (index < 0)
+            {
                 return "";
+            }
             var setOfLangs = availableLanguages[index];
             if (setOfLangs.Count > 0)
             {
@@ -132,32 +178,45 @@ namespace PhoneNumbers
         {
             var fullLocale = ConstructFullLocale(language, script, region);
             var fullLocaleStr = fullLocale.ToString();
-            string normalizedLocale;
-            if (LocaleNormalizationMap.TryGetValue(fullLocaleStr, out normalizedLocale))
+            if (LocaleNormalizationMap.TryGetValue(fullLocaleStr, out var normalizedLocale))
+            {
                 if (setOfLangs.Contains(normalizedLocale))
+                {
                     return normalizedLocale;
+                }
+            }
             if (setOfLangs.Contains(fullLocaleStr))
+            {
                 return fullLocaleStr;
+            }
 
             if (OnlyOneOfScriptOrRegionIsEmpty(script, region))
             {
                 if (setOfLangs.Contains(language))
+                {
                     return language;
+                }
             }
             else if (script.Length > 0 && region.Length > 0)
             {
                 var langWithScript = new StringBuilder(language).Append('_').Append(script);
                 var langWithScriptStr = langWithScript.ToString();
                 if (setOfLangs.Contains(langWithScriptStr))
+                {
                     return langWithScriptStr;
+                }
 
                 var langWithRegion = new StringBuilder(language).Append('_').Append(region);
                 var langWithRegionStr = langWithRegion.ToString();
                 if (setOfLangs.Contains(langWithRegionStr))
+                {
                     return langWithRegionStr;
+                }
 
                 if (setOfLangs.Contains(language))
+                {
                     return language;
+                }
             }
             return "";
         }
@@ -178,7 +237,9 @@ namespace PhoneNumbers
         private static void AppendSubsequentLocalePart(string subsequentLocalePart, StringBuilder fullLocale)
         {
             if (subsequentLocalePart.Length > 0)
+            {
                 fullLocale.Append('_').Append(subsequentLocalePart);
+            }
         }
     }
 }

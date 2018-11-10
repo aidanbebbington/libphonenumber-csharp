@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+using System.Linq;
+
 namespace PhoneNumbers.Internal
 {
     public sealed class RegexBasedMatcher : IMatcherApi

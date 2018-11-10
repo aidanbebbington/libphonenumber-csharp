@@ -513,7 +513,10 @@ namespace PhoneNumbers
                 return prefixBeforeNationalNumber.ToString() + SeparatorBeforeNationalNumber
                        + nationalNumberStr;
             }
-            return prefixBeforeNationalNumber + nationalNumberStr;
+            else
+            {
+                return prefixBeforeNationalNumber + nationalNumberStr;
+            }
         }
 
         // Attempts to set the formatting template and returns a string which contains the formatted

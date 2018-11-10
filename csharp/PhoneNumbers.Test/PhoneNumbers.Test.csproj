@@ -10,6 +10,10 @@
   <ItemGroup>
     <ProjectReference Include="..\PhoneNumbers\PhoneNumbers.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="resources\**\*.*" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />

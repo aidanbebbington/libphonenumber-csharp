@@ -24,7 +24,7 @@ namespace PhoneNumbers.Test
         [Fact]
         public void TestValueTypeSemantics()
         {
-            var number = new PhoneNumber();
+            var number = PhoneNumber.DefaultInstance;
             var match1 = new PhoneNumberMatch(10, "1 800 234 45 67", number);
             var match2 = new PhoneNumberMatch(10, "1 800 234 45 67", number);
 
@@ -43,9 +43,9 @@ namespace PhoneNumbers.Test
         [Fact]
         public void TestIllegalArguments()
         {
-            Assert.Throws<ArgumentException>(() => new PhoneNumberMatch(-110, "1 800 234 45 67", new PhoneNumber()));
+            Assert.Throws<ArgumentException>(() => new PhoneNumberMatch(-110, "1 800 234 45 67", PhoneNumber.DefaultInstance));
             Assert.Throws<ArgumentNullException>(() => new PhoneNumberMatch(10, "1 800 234 45 67", null));
-            Assert.Throws<ArgumentNullException>(() => new PhoneNumberMatch(10, null, new PhoneNumber()));
+            Assert.Throws<ArgumentNullException>(() => new PhoneNumberMatch(10, null, PhoneNumber.DefaultInstance));
             Assert.Throws<ArgumentNullException>(() => new PhoneNumberMatch(10, null, null));
         }
     }

@@ -41,24 +41,24 @@ namespace PhoneNumbers
             Country = countryCode;
         }
 
-        public string GetDisplayCountry(string language)
+        public string GetDisplayCountry(Locale local)
         {
-            if(string.IsNullOrEmpty(Country))
+            if (string.IsNullOrEmpty(Country))
                 return "";
-            var name = GetCountryName(Country, language);
-            if(name != null)
+            var name = GetCountryName(Country, local.Language);
+            if (name != null)
                 return name;
             var lang = CultureInfo.CurrentCulture.TwoLetterISOLanguageName;
-            if(lang != language)
+            if (lang != local.Language)
             {
                 name = GetCountryName(Country, lang);
-                if(name != null)
+                if (name != null)
                     return name;
             }
-            if(language != "en" && lang != "en")
+            if (local.Language != "en" && lang != "en")
             {
                 name = GetCountryName(Country, "en");
-                if(name != null)
+                if (name != null)
                     return name;
             }
             name = GetCountryName(Country, Language);
@@ -68,104 +68,27 @@ namespace PhoneNumbers
         private static string GetCountryName(string country, string language)
         {
             var names = LocaleData.Data[country];
-            if (!names.TryGetValue(language, out string name))
+            if (!names.TryGetValue(language, out var name))
                 return null;
             if (name.Length > 0 && name[0] == '*')
                 return names[name.Substring(1)];
             return name;
         }
     }
-    /**
-     * An offline geocoder which provides geographical information related to a phone number.
-     *
-     * @author Shaopeng Jia
-     */
+
     public class PhoneNumberOfflineGeocoder
     {
         private static PhoneNumberOfflineGeocoder instance;
-        private const string MAPPING_DATA_DIRECTORY = "res.prod_";
+        private const string phonePrefixDataDirectory = "resources.geocoding";
+        private readonly Assembly assembly;
+        private readonly PrefixFileReader prefixFileReader;
         private static readonly object ThisLock = new object();
 
         private readonly PhoneNumberUtil phoneUtil = PhoneNumberUtil.GetInstance();
-        private readonly string phonePrefixDataDirectory;
 
-        // The mappingFileProvider knows for which combination of countryCallingCode and language a phone
-        // prefix mapping file is available in the file system, so that a file can be loaded when needed.
-        private MappingFileProvider mappingFileProvider = new MappingFileProvider();
-
-        // A mapping from countryCallingCode_lang to the corresponding phone prefix map that has been
-        // loaded.
-        private readonly Dictionary<string, AreaCodeMap> availablePhonePrefixMaps = new Dictionary<string, AreaCodeMap>();
-
-        // @VisibleForTesting
-        public PhoneNumberOfflineGeocoder(string phonePrefixDataDirectory)
+        public PhoneNumberOfflineGeocoder(Assembly assembly)
         {
-            this.phonePrefixDataDirectory = phonePrefixDataDirectory;
-            LoadMappingFileProvider();
-        }
-
-        private void LoadMappingFileProvider()
-        {
-            var files = new SortedDictionary<int, HashSet<string>>();
-#if (NET35 || NET40)
-            var asm = Assembly.GetExecutingAssembly();
-#else
-            var asm = typeof(PhoneNumberOfflineGeocoder).GetTypeInfo().Assembly;
-#endif
-            var allNames = asm.GetManifestResourceNames();
-            var prefix = asm.GetName().Name + "." + phonePrefixDataDirectory;
-            var names = allNames.Where(n => n.StartsWith(prefix));
-            foreach (var n in names)
-            {
-                var name = n.Substring(prefix.Length);
-                var pos = name.IndexOf("_", StringComparison.Ordinal);
-                int country;
-                try
-                {
-                    country = int.Parse(name.Substring(0, pos));
-                }
-                catch(FormatException)
-                {
-                    throw new Exception("Failed to parse geocoding file name: " + name);
-                }
-                var language = name.Substring(pos + 1);
-                if (!files.ContainsKey(country))
-                    files[country] = new HashSet<string>();
-                files[country].Add(language);
-            }
-            mappingFileProvider = new MappingFileProvider();
-            mappingFileProvider.ReadFileConfigs(files);
-        }
-
-        private AreaCodeMap GetPhonePrefixDescriptions(
-            int prefixMapKey, string language, string script, string region)
-        {
-            var fileName = mappingFileProvider.GetFileName(prefixMapKey, language, script, region);
-            if (fileName.Length == 0)
-            {
-                return null;
-            }
-            if (!availablePhonePrefixMaps.ContainsKey(fileName))
-            {
-                LoadAreaCodeMapFromFile(fileName);
-            }
-            return availablePhonePrefixMaps.TryGetValue(fileName, out AreaCodeMap map) ? map : null;
-        }
-
-        private void LoadAreaCodeMapFromFile(string fileName)
-        {
-#if (NET35 || NET40)
-            var asm = Assembly.GetExecutingAssembly();
-#else
-            var asm = typeof(PhoneNumberOfflineGeocoder).GetTypeInfo().Assembly;
-#endif
-            var prefix = asm.GetName().Name + "." + phonePrefixDataDirectory;
-            var resName = prefix + fileName;
-            using (var fp = asm.GetManifestResourceStream(resName))
-            {
-                var areaCodeMap = AreaCodeParser.ParseAreaCodeMap(fp);
-                availablePhonePrefixMaps[fileName] = areaCodeMap;
-            }
+            prefixFileReader = new PrefixFileReader(assembly, phonePrefixDataDirectory);
         }
 
         /**
@@ -181,91 +104,128 @@ namespace PhoneNumbers
         {
             lock (ThisLock)
             {
-                return instance ?? (instance = new PhoneNumberOfflineGeocoder(MAPPING_DATA_DIRECTORY));
+                return instance ?? (instance = new PhoneNumberOfflineGeocoder(
+#if (NET35 || NET40)
+                    Assembly.GetExecutingAssembly()));
+#else
+                    typeof(PhoneNumberOfflineGeocoder).GetTypeInfo().Assembly));
+#endif
+
             }
         }
 
         /**
-         * Preload the data file for the given language and country calling code, so that a future lookup
-         * for this language and country calling code will not incur any file loading.
-         *
-         * @param locale  specifies the language of the data file to load
-         * @param countryCallingCode   specifies the country calling code of phone numbers that are
-         *     contained by the file to be loaded
-         */
-        public void LoadDataFile(Locale locale, int countryCallingCode)
-        {
-            instance.GetPhonePrefixDescriptions(countryCallingCode, locale.Language, "",
-                locale.Country);
-        }
-
-        /**
          * Returns the customary display name in the given language for the given territory the phone
-         * number is from.
+         * number is from. If it could be from many territories, nothing is returned.
          */
         private string GetCountryNameForNumber(PhoneNumber number, Locale language)
         {
-            var regionCode = phoneUtil.GetRegionCodeForNumber(number);
-            return GetRegionDisplayName(regionCode, language);
+            var regionCodes =
+                phoneUtil.GetRegionCodesForCountryCode(number.CountryCode);
+            if (regionCodes.Count == 1)
+            {
+                return GetRegionDisplayName(regionCodes[0], language);
+            }
+            var regionWhereNumberIsValid = "ZZ";
+            foreach (var regionCode in regionCodes)
+            {
+                if (phoneUtil.IsValidNumberForRegion(number, regionCode))
+                {
+                    // If the number has already been found valid for one region, then we don't know which
+                    // region it belongs to so we return nothing.
+                    if (!regionWhereNumberIsValid.Equals("ZZ"))
+                    {
+                        return "";
+                    }
+                    regionWhereNumberIsValid = regionCode;
+                }
+            }
+            return GetRegionDisplayName(regionWhereNumberIsValid, language);
         }
 
-        /**
-        * Returns the customary display name in the given language for the given region.
-        */
-        private static string GetRegionDisplayName(string regionCode, Locale language)
+        private string GetRegionDisplayName(string regionCode, Locale language)
         {
             return regionCode == null || regionCode.Equals("ZZ") ||
                    regionCode.Equals(PhoneNumberUtil.RegionCodeForNonGeoEntity)
-                ? "" : new Locale("", regionCode).GetDisplayCountry(language.Language);
+                ? "" : new Locale("", regionCode).GetDisplayCountry(language);
         }
 
         /**
-        * Returns a text description for the given phone number, in the language provided. The
-        * description might consist of the name of the country where the phone number is from, or the
-        * name of the geographical area the phone number is from if more detailed information is
-        * available.
-        *
-        * <p>This method assumes the validity of the number passed in has already been checked.
-        *
-        * @param number  a valid phone number for which we want to get a text description
-        * @param languageCode  the language code for which the description should be written
-        * @return  a text description for the given language code for the given phone number
-        */
+         * Returns a text description for the given phone number, in the language provided. The
+         * description might consist of the name of the country where the phone number is from, or the
+         * name of the geographical area the phone number is from if more detailed information is
+         * available.
+         *
+         * <p>This method assumes the validity of the number passed in has already been checked, and that
+         * the number is suitable for geocoding. We consider fixed-line and mobile numbers possible
+         * candidates for geocoding.
+         *
+         * @param number  a valid phone number for which we want to get a text description
+         * @param languageCode  the language code for which the description should be written
+         * @return  a text description for the given language code for the given phone number, or an
+         *     empty string if the number could come from multiple countries, or the country code is
+         *     in fact invalid
+         */
         public string GetDescriptionForValidNumber(PhoneNumber number, Locale languageCode)
         {
             var langStr = languageCode.Language;
             var scriptStr = "";  // No script is specified
             var regionStr = languageCode.Country;
 
-            var areaDescription =
-                GetAreaDescriptionForNumber(number, langStr, scriptStr, regionStr);
+            string areaDescription;
+            var mobileToken = PhoneNumberUtil.GetCountryMobileToken(number.CountryCode);
+            var nationalNumber = phoneUtil.GetNationalSignificantNumber(number);
+            if (!mobileToken.Equals("") && nationalNumber.StartsWith(mobileToken))
+            {
+                // In some countries, eg. Argentina, mobile numbers have a mobile token before the national
+                // destination code, this should be removed before geocoding.
+                nationalNumber = nationalNumber.Substring(mobileToken.Length);
+                var region = phoneUtil.GetRegionCodeForCountryCode(number.CountryCode);
+                PhoneNumber copiedNumber;
+                try
+                {
+                    copiedNumber = phoneUtil.Parse(nationalNumber, region);
+                }
+                catch (NumberParseException)
+                {
+                    // If this happens, just reuse what we had.
+                    copiedNumber = number;
+                }
+                areaDescription = prefixFileReader.GetDescriptionForNumber(copiedNumber, langStr, scriptStr,
+                    regionStr);
+            }
+            else
+            {
+                areaDescription = prefixFileReader.GetDescriptionForNumber(number, langStr, scriptStr,
+                    regionStr);
+            }
             return (areaDescription.Length > 0)
                 ? areaDescription : GetCountryNameForNumber(number, languageCode);
         }
 
         /**
-        * As per {@link #getDescriptionForValidNumber(PhoneNumber, Locale)} but also considers the
-        * region of the user. If the phone number is from the same region as the user, only a lower-level
-        * description will be returned, if one exists. Otherwise, the phone number's region will be
-        * returned, with optionally some more detailed information.
-        *
-        * <p>For example, for a user from the region "US" (United States), we would show "Mountain View,
-        * CA" for a particular number, omitting the United States from the description. For a user from
-        * the United Kingdom (region "GB"), for the same number we may show "Mountain View, CA, United
-        * States" or even just "United States".
-        *
-        * <p>This method assumes the validity of the number passed in has already been checked.
-        *
-        * @param number  the phone number for which we want to get a text description
-        * @param languageCode  the language code for which the description should be written
-        * @param userRegion  the region code for a given user. This region will be omitted from the
-        *     description if the phone number comes from this region. It is a two-letter uppercase ISO
-        *     country code as defined by ISO 3166-1.
-        * @return  a text description for the given language code for the given phone number, or empty
-        *     string if the number passed in is invalid
-        */
-        public string GetDescriptionForValidNumber(PhoneNumber number, Locale languageCode,
-            string userRegion)
+         * As per {@link #getDescriptionForValidNumber(PhoneNumber, Locale)} but also considers the
+         * region of the user. If the phone number is from the same region as the user, only a lower-level
+         * description will be returned, if one exists. Otherwise, the phone number's region will be
+         * returned, with optionally some more detailed information.
+         *
+         * <p>For example, for a user from the region "US" (United States), we would show "Mountain View,
+         * CA" for a particular number, omitting the United States from the description. For a user from
+         * the United Kingdom (region "GB"), for the same number we may show "Mountain View, CA, United
+         * States" or even just "United States".
+         *
+         * <p>This method assumes the validity of the number passed in has already been checked.
+         *
+         * @param number  the phone number for which we want to get a text description
+         * @param languageCode  the language code for which the description should be written
+         * @param userRegion  the region code for a given user. This region will be omitted from the
+         *     description if the phone number comes from this region. It should be a two-letter
+         *     upper-case CLDR region code.
+         * @return  a text description for the given language code for the given phone number, or an
+         *     empty string if the number could come from multiple countries, or the country code is
+         *     in fact invalid
+         */
+        public string GetDescriptionForValidNumber(PhoneNumber number, Locale languageCode, string userRegion)
         {
             // If the user region matches the number's region, then we just show the lower-level
             // description, if one exists - if no description exists, we will show the region(country) name
@@ -288,11 +248,20 @@ namespace PhoneNumbers
         * @param number  the phone number for which we want to get a text description
         * @param languageCode  the language code for which the description should be written
         * @return  a text description for the given language code for the given phone number, or empty
-        *     string if the number passed in is invalid
+        *     string if the number passed in is invalid or could belong to multiple countries
         */
         public string GetDescriptionForNumber(PhoneNumber number, Locale languageCode)
         {
-            return !phoneUtil.IsValidNumber(number) ? "" : GetDescriptionForValidNumber(number, languageCode);
+            var numberType = phoneUtil.GetNumberType(number);
+            if (numberType == PhoneNumberType.UNKNOWN)
+            {
+                return "";
+            }
+            if (!phoneUtil.IsNumberGeographical(numberType, number.CountryCode))
+            {
+                return GetCountryNameForNumber(number, languageCode);
+            }
+            return GetDescriptionForValidNumber(number, languageCode);
         }
 
         /**
@@ -302,53 +271,24 @@ namespace PhoneNumbers
         * @param number  the phone number for which we want to get a text description
         * @param languageCode  the language code for which the description should be written
         * @param userRegion  the region code for a given user. This region will be omitted from the
-        *     description if the phone number comes from this region. It is a two-letter uppercase ISO
+        *     description if the phone number comes from this region. It should be a two-letter
+        *     upper-case CLDR region code.
         *     country code as defined by ISO 3166-1.
         * @return  a text description for the given language code for the given phone number, or empty
-        *     string if the number passed in is invalid
+        *     string if the number passed in is invalid or could belong to multiple countries
         */
-        public string GetDescriptionForNumber(PhoneNumber number, Locale languageCode,
-            string userRegion)
+        public string GetDescriptionForNumber(PhoneNumber number, Locale languageCode, string userRegion)
         {
-            return !phoneUtil.IsValidNumber(number)
-                ? ""
-                : GetDescriptionForValidNumber(number, languageCode, userRegion);
-        }
-
-        private string GetAreaDescriptionForNumber(
-            PhoneNumber number, string lang, string script, string region)
-        {
-            var countryCallingCode = number.CountryCode;
-            // As the NANPA data is split into multiple files covering 3-digit areas, use a phone number
-            // prefix of 4 digits for NANPA instead, e.g. 1650.
-            //int phonePrefix = (countryCallingCode != 1) ?
-            //    countryCallingCode : (1000 + (int) (number.NationalNumber / 10000000));
-            var phonePrefix = countryCallingCode;
-
-            var phonePrefixDescriptions =
-                GetPhonePrefixDescriptions(phonePrefix, lang, script, region);
-            var description = phonePrefixDescriptions?.Lookup(number);
-            // When a location is not available in the requested language, fall back to English.
-            if (string.IsNullOrEmpty(description) && MayFallBackToEnglish(lang))
+            var numberType = phoneUtil.GetNumberType(number);
+            if (numberType == PhoneNumberType.UNKNOWN)
             {
-                var defaultMap = GetPhonePrefixDescriptions(phonePrefix, "en", "", "");
-                if (defaultMap == null)
-                {
-                    return "";
-                }
-                description = defaultMap.Lookup(number);
+                return "";
             }
-            return description ?? "";
+            if (!phoneUtil.IsNumberGeographical(numberType, number.CountryCode))
+            {
+                return GetCountryNameForNumber(number, languageCode);
+            }
+            return GetDescriptionForNumber(number, languageCode, userRegion);
         }
-
-        private static bool MayFallBackToEnglish(string lang)
-        {
-            // Don't fall back to English if the requested language is among the following:
-            // - Chinese
-            // - Japanese
-            // - Korean
-            return !lang.Equals("zh") && !lang.Equals("ja") && !lang.Equals("ko");
-        }
-
     }
 }

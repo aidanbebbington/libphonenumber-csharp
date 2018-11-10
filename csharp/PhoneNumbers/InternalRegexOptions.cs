@@ -7,7 +7,8 @@ namespace PhoneNumbers
     /// <see cref="Regex"/> instances at runtime within this library.
     /// </summary>
     /// <threadsafety static="true" instance="false"/>
-    internal static class InternalRegexOptions
+    /// todo relocate maybe
+    public static class InternalRegexOptions
     {
         public static RegexOptions Default { get; }
 

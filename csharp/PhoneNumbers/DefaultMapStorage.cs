@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace PhoneNumbers
@@ -27,7 +28,7 @@ namespace PhoneNumbers
     *
     * @author Shaopeng Jia
     */
-    public class DefaultMapStorage : AreaCodeMapStorageStrategy
+    public class DefaultMapStorage : PhonePrefixMapStorageStrategy
     {
         private int[] phoneNumberPrefixes;
         private string[] descriptions;
@@ -35,11 +36,6 @@ namespace PhoneNumbers
         public override int GetPrefix(int index)
         {
             return phoneNumberPrefixes[index];
-        }
-
-        public override int GetStorageSize()
-        {
-            return phoneNumberPrefixes.Length * sizeof(int) + descriptions.Sum(d => d.Length);
         }
 
         public override string GetDescription(int index)
@@ -53,18 +49,52 @@ namespace PhoneNumbers
             phoneNumberPrefixes = new int[NumOfEntries];
             descriptions = new string[NumOfEntries];
             var index = 0;
-            var possibleLengthsSet = new HashSet<int>();
             foreach (var prefix in sortedAreaCodeMap.Keys)
             {
                 phoneNumberPrefixes[index] = prefix;
-                descriptions[index] = sortedAreaCodeMap[prefix];
-                index++;
-                var lengthOfPrefix = (int)Math.Log10(prefix) + 1;
-                possibleLengthsSet.Add(lengthOfPrefix);
+                descriptions[index++] = sortedAreaCodeMap[prefix];
+                PossibleLengths.Add((int)Math.Log10(prefix) + 1);
             }
+        }
+
+        public override void ReadExternal(BinaryReader objectInput)
+        {
+            NumOfEntries = objectInput.ReadInt32();
+            if (phoneNumberPrefixes == null || phoneNumberPrefixes.Length < NumOfEntries)
+            {
+                phoneNumberPrefixes = new int[NumOfEntries];
+            }
+            if (descriptions == null || descriptions.Length < NumOfEntries)
+            {
+                descriptions = new string[NumOfEntries];
+            }
+            for (var i = 0; i < NumOfEntries; i++)
+            {
+                phoneNumberPrefixes[i] = objectInput.ReadInt32();
+                descriptions[i] = objectInput.ReadString();
+            }
+            var sizeOfLengths = objectInput.ReadInt32();
             PossibleLengths.Clear();
-            PossibleLengths.AddRange(possibleLengthsSet);
-            PossibleLengths.Sort();
+            for (var i = 0; i < sizeOfLengths; i++)
+            {
+                PossibleLengths.Add(objectInput.ReadInt32());
+            }
+        }
+
+        public override void WriteExternal(BinaryWriter objectOutput)
+        {
+            objectOutput.Write(NumOfEntries);
+            for (var i = 0; i < NumOfEntries; i++)
+            {
+                objectOutput.Write(phoneNumberPrefixes[i]);
+                objectOutput.Write(descriptions[i]);
+            }
+            var sizeOfLengths = PossibleLengths.Count;
+            objectOutput.Write(sizeOfLengths);
+            foreach (var length in PossibleLengths)
+            {
+                objectOutput.Write(length);
+            }
         }
     }
 }

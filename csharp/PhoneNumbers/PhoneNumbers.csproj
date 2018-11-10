@@ -51,4 +51,16 @@
     <Compile Include="compat\ISet.cs" />
     <Compile Include="compat\SortedSet.cs" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net35'">
+    <PackageReference Include="TaskParallelLibrary">
+      <Version>1.0.2856</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'portable-net45+win8+wpa81+wp8'">
+    <PackageReference Include="Portable.ConcurrentDictionary">
+      <Version>1.0.3</Version>
+    </PackageReference>
+  </ItemGroup>
 </Project>

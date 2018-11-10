@@ -23,6 +23,8 @@ replacements = [
     (r'\n    public static \w+ ParseDelimitedFrom.*?\n    }', '', re.S),
     (r'\n      public override Builder MergeFrom\(pb\:\:.*?\n      }', '', re.S),
     (r'\n    public override void PrintTo.*?\n    }', '', re.S),
+    # Remove CalcSerializedSize
+    (r'\n    private int CalcSerializedSize.*?\n    }', '', re.S),
     (r'pbc::PopsicleList<([^>]+)>', r'scg::List<\1>', None),
     (r'pbc::IPopsicleList<([^>]+)>', r'scg::IList<\1>', None),
     (r'pb::ThrowHelper.ThrowIfNull\(([^,]+), ([^\)]+)\);',
@@ -36,10 +38,19 @@ replacements = [
          re.S),
 
     (r'pbc::Lists.AsReadOnly\(([^\)]+)\)', r'\1', None),
+    (r'\n    private (\S)+ MakeReadOnly.*?\n    }', '', re.S),
 
     (r'\n\s*result[^\n]+MakeReadOnly\(\);', '\n', re.S),
+    (r'\.MakeReadOnly\(\)', '', None),
     (r'base\.AddRange\(([^,]+),([^\)]+)\);', r'\2.AddRange(\1);', None),
     (r'private int memoizedSerializedSize = -1;', '', None),
+    (r'\.Add\(values\)', '.AddRange(values)', None),
+    (r'\.Add\((\w+\.(leading|metadata|possible))', r'.AddRange(\1', None),
+    (r'\.Add\((\w+\.\w+(Pattern|Format)_)\)', r'.AddRange(\1)', None),
+
+    (r'global::PhoneNumbers\.', '', None),
+    (r'scg = global::', '', None),
+    (r'scg::', '', None),
 ]
 
 

@@ -1,4 +1,4 @@
-﻿/*
+﻿﻿/*
  * Copyright (C) 2010 The Libphonenumber Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

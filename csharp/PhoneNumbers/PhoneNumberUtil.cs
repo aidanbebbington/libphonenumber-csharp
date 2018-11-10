@@ -21,9 +21,62 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using PhoneNumbers.Internal;
 
 namespace PhoneNumbers
 {
+    /**
+    * INTERNATIONAL and NATIONAL formats are consistent with the definition in ITU-T Recommendation
+    * E123. For example, the number of the Google Switzerland office will be written as
+    * "+41 44 668 1800" in INTERNATIONAL format, and as "044 668 1800" in NATIONAL format.
+    * E164 format is as per INTERNATIONAL format but with no formatting applied, e.g.
+    * "+41446681800". RFC3966 is as per INTERNATIONAL format, but with all spaces and other
+    * separating symbols replaced with a hyphen, and with any phone number extension appended with
+    * ";ext=". It also will have a prefix of "tel:" added, e.g. "tel:+41-44-668-1800".
+    *
+    * Note: If you are considering storing the number in a neutral format, you are highly advised to
+    * use the PhoneNumber class.
+    */
+    public enum PhoneNumberFormat
+    {
+        E164,
+        INTERNATIONAL,
+        NATIONAL,
+        RFC3966
+    }
+
+    // Type of phone numbers.
+    public enum PhoneNumberType
+    {
+        FIXED_LINE,
+        MOBILE,
+        // In some regions (e.g. the USA), it is impossible to distinguish between fixed-line and
+        // mobile numbers by looking at the phone number itself.
+        FIXED_LINE_OR_MOBILE,
+        // Freephone lines
+        TOLL_FREE,
+        PREMIUM_RATE,
+        // The cost of this call is shared between the caller and the recipient, and is hence typically
+        // less than PREMIUM_RATE calls. See // http://en.wikipedia.org/wiki/Shared_Cost_Service for
+        // more information.
+        SHARED_COST,
+        // Voice over IP numbers. This includes TSoIP (Telephony Service over IP).
+        VOIP,
+        // A personal number is associated with a particular person, and may be routed to either a
+        // MOBILE or FIXED_LINE number. Some more information can be found here:
+        // http://en.wikipedia.org/wiki/Personal_Numbers
+        PERSONAL_NUMBER,
+        PAGER,
+        // Used for "Universal Access Numbers" or "Company Numbers". They may be further routed to
+        // specific offices, but allow one number to be used for a company.
+        UAN,
+        // Used for "Voice Mail Access Numbers".
+        VOICEMAIL,
+        // A phone number is of type UNKNOWN when it does not fit any of the known patterns for a
+        // specific region.
+        UNKNOWN
+    }
+
     /**
     * Utility for international phone numbers. Functionality includes formatting, parsing and
     * validation.
@@ -83,7 +136,7 @@ namespace PhoneNumbers
         private static readonly Dictionary<int, string> MobileTokenMappings = new Dictionary<int, string>
         {
             {52, "1" },
-            {54, "9" }
+            {54, "9" },
         };
 
         // Set of country codes that have geographically assigned mobile numbers (see GEO_MOBILE_COUNTRIES
@@ -92,7 +145,7 @@ namespace PhoneNumbers
         // considered to be an area code.
         private static readonly HashSet<int> GeoMobileCountriesWithoutMobileAreaCodes = new HashSet<int>
         {
-            86  // China
+            86,  // China
         };
 
         // Set of country calling codes that have geographically assigned mobile numbers. This may not be
@@ -106,7 +159,7 @@ namespace PhoneNumbers
             54,  // Argentina
             55,  // Brazil
             62,  // Indonesia: some prefixes only (fixed CMDA wireless)
-            86  // China
+            86,  // China
         };
 
 
@@ -172,9 +225,8 @@ namespace PhoneNumbers
         // another number, such as for: (530) 583-6985 x302/x2303 -> the second extension here makes this
         // actually two phone numbers, (530) 583-6985 x302 and (530) 583-6985 x2303. We remove the second
         // extension so that the first number is parsed correctly.
-        private const string SECOND_NUMBER_START = "[\\\\/] *x";
-
-        internal static readonly Regex SecondNumberStartPattern = new Regex(SECOND_NUMBER_START, InternalRegexOptions.Default);
+        private static readonly string SecondNumberStart = "[\\\\/] *x";
+        internal static readonly Regex SecondNumberStartPattern = new Regex(SecondNumberStart, InternalRegexOptions.Default);
 
         // We use this pattern to check if the phone number has at least three letters in it - if so, then
         // we treat it as a number where some phone-number digits are represented by letters.
@@ -1023,7 +1075,8 @@ namespace PhoneNumbers
             lock (ThisLock)
             {
                 if (instance == null)
-                    return GetInstance(MetaDataFilePrefix, BuildMetadataFromXml.GetCountryCodeToRegionCodeMap(MetaDataFilePrefix));
+                    return GetInstance(MetaDataFilePrefix,
+                        CountryCodeToRegionCodeMap.GetCountryCodeToRegionCodeMap());
                 return instance;
             }
         }
@@ -2173,13 +2226,26 @@ namespace PhoneNumbers
         /**
         * Returns the region code that matches the specific country calling code. In the case of no
         * region code being found, ZZ will be returned. In the case of multiple regions, the one
-        * designated in the metadata as the "main" region for this calling code will be returned.
+        * designated in the metadata as the "main" region for this calling code will be returned. If the
+        * countryCallingCode entered is valid but doesn't match a specific region (such as in the case of
+        * non-geographical calling codes like 800) the value "001" will be returned (corresponding to
+        * the value for World in the UN M.49 schema).
         */
         public string GetRegionCodeForCountryCode(int countryCallingCode)
         {
             return countryCallingCodeToRegionCodeMap.TryGetValue(countryCallingCode, out List<string> regionCodes)
                 ? regionCodes[0]
                 : UnknownRegion;
+        }
+        
+        /**
+        * Returns a list with the region codes that match the specific country calling code. For
+        * non-geographical country calling codes, the region code 001 is returned. Also, in the case
+        * of no region code being found, an empty list is returned.
+        */
+        public List<string> GetRegionCodesForCountryCode(int countryCallingCode)
+        {
+            return countryCallingCodeToRegionCodeMap[countryCallingCode] ?? new List<string>();
         }
 
         /**
@@ -2925,19 +2991,20 @@ namespace PhoneNumbers
         */
         private static void SetItalianLeadingZerosForPhoneNumber(string nationalNumber, PhoneNumber.Builder phoneNumber)
         {
-            if (nationalNumber.Length <= 1 || nationalNumber[0] != '0') return;
-
-            phoneNumber.SetItalianLeadingZero(true);
-            var numberOfLeadingZeros = 1;
-            //Note that if the national number is all "0"s, the last "0" is not counted as a leading zero.
-            while (numberOfLeadingZeros < nationalNumber.Length - 1
-                   && nationalNumber[numberOfLeadingZeros] == '0')
+            if (nationalNumber.Length > 1 && nationalNumber[0] == '0')
             {
-                numberOfLeadingZeros++;
-            }
-            if (numberOfLeadingZeros != 1)
-            {
-                phoneNumber.SetNumberOfLeadingZeros(numberOfLeadingZeros);
+                phoneNumber.SetItalianLeadingZero(true);
+                var numberOfLeadingZeros = 1;
+                //Note that if the national number is all "0"s, the last "0" is not counted as a leading zero.
+                while (numberOfLeadingZeros < nationalNumber.Length - 1
+                       && nationalNumber[numberOfLeadingZeros] == '0')
+                {
+                    numberOfLeadingZeros++;
+                }
+                if (numberOfLeadingZeros != 1)
+                {
+                    phoneNumber.SetNumberOfLeadingZeros(numberOfLeadingZeros);
+                }
             }
         }
 
@@ -2947,7 +3014,8 @@ namespace PhoneNumbers
         * isNumberMatch(). checkRegion should be set to false if it is permitted for the default region
         * to be null or unknown ("ZZ").
         */
-        private void ParseHelper(string numberToParse, string defaultRegion, bool keepRawInput, bool checkRegion, PhoneNumber.Builder phoneNumber)
+        private void ParseHelper(string numberToParse, string defaultRegion, bool keepRawInput,
+            bool checkRegion, PhoneNumber.Builder phoneNumber)
         {
             if (numberToParse == null)
                 throw new NumberParseException(ErrorType.NOT_A_NUMBER,
@@ -3337,6 +3405,19 @@ namespace PhoneNumbers
             var metadata = GetMetadataForRegion(regionCode);
             var nationalSignificantNumber = GetNationalSignificantNumber(number);
             return !IsNumberMatchingDesc(nationalSignificantNumber, metadata.NoInternationalDialling);
+        }
+
+        /**
+        * Returns true if the supplied region supports mobile number portability. Returns false for
+        * invalid, unknown or regions that don't support mobile number portability.
+        *
+        * @param regionCode  the region for which we want to know whether it supports mobile number
+        *     portability or not
+        */
+        public bool IsMobileNumberPortableRegion(string regionCode)
+        {
+            var metadata = GetMetadataForRegion(regionCode);
+            return metadata != null && metadata.MobileNumberPortableRegion;
         }
     }
 }
