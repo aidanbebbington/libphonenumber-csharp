@@ -23,8 +23,8 @@ namespace PhoneNumbers.Test
     public class TestExampleNumbers
     {
         private readonly PhoneNumberUtil phoneNumberUtil = PhoneNumberUtil.GetInstance();
-        private readonly List<PhoneNumber> invalidCases = new List<PhoneNumber>();
-        private readonly List<PhoneNumber> wrongTypeCases = new List<PhoneNumber>();
+        private readonly List<PhoneNumber> invalidCases = new();
+        private readonly List<PhoneNumber> wrongTypeCases = new();
 
         /**
         * @param exampleNumberRequestedType  type we are requesting an example number for

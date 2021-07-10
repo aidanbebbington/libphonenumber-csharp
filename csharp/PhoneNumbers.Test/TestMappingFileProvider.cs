@@ -27,16 +27,16 @@ namespace PhoneNumbers.Test
     [Collection("TestMetadataTestCase")]
     public class TestMappingFileProvider
     {
-        private readonly MappingFileProvider mappingProvider = new MappingFileProvider();
+        private readonly MappingFileProvider mappingProvider = new();
 
         public TestMappingFileProvider()
         {
             var mapping = new SortedDictionary<int, HashSet<string>>
             {
-                [1] = new HashSet<string>(new[] {"en"}),
-                [86] = new HashSet<string>(new[] {"zh", "en", "zh_Hant"}),
-                [41] = new HashSet<string>(new[] {"de", "fr", "it", "rm"}),
-                [65] = new HashSet<string>(new[] {"en", "zh_Hans", "ms", "ta"})
+                [1] = new (new[] {"en"}),
+                [86] = new (new[] {"zh", "en", "zh_Hant"}),
+                [41] = new (new[] {"de", "fr", "it", "rm"}),
+                [65] = new (new[] {"en", "zh_Hans", "ms", "ta"})
             };
             mappingProvider.ReadFileConfigs(mapping);
         }

@@ -443,7 +443,7 @@ namespace PhoneNumbers
                 throw new Exception($"Multiple elements with type {numberType} found.");
             var element = phoneNumberDescList[0];
 
-            parentDesc ??= new PhoneNumberDesc();
+            parentDesc ??= new();
             var lengths = new SortedSet<int>();
             var localOnlyLengths = new SortedSet<int>();
             PopulatePossibleLengthSets(element.Elements(POSSIBLE_LENGTHS), lengths, localOnlyLengths);

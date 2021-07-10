@@ -36,11 +36,11 @@ namespace PhoneNumbers
     public class AsYouTypeFormatter
     {
         private string currentOutput = "";
-        private readonly StringBuilder formattingTemplate = new StringBuilder();
+        private readonly StringBuilder formattingTemplate = new();
         // The pattern from numberFormat that is currently used to create formattingTemplate.
         private string currentFormattingPattern = "";
-        private readonly StringBuilder accruedInput = new StringBuilder();
-        private readonly StringBuilder accruedInputWithoutFormatting = new StringBuilder();
+        private readonly StringBuilder accruedInput = new();
+        private readonly StringBuilder accruedInputWithoutFormatting = new();
         // This indicates whether AsYouTypeFormatter is currently doing the formatting.
         private bool ableToFormat = true;
         // Set to true when users enter their own formatting. AsYouTypeFormatter will do no formatting at
@@ -94,12 +94,12 @@ namespace PhoneNumbers
         // This contains anything that has been entered so far preceding the national significant number,
         // and it is formatted (e.g. with space inserted). For example, this can contain IDD, country
         // code, and/or NDD, etc.
-        private readonly StringBuilder prefixBeforeNationalNumber = new StringBuilder();
+        private readonly StringBuilder prefixBeforeNationalNumber = new();
         // This contains the national prefix that has been extracted. It contains only digits without
         // formatting.
         private string extractedNationalPrefix = "";
-        private readonly StringBuilder nationalNumber = new StringBuilder();
-        private readonly List<NumberFormat> possibleFormats = new List<NumberFormat>();
+        private readonly StringBuilder nationalNumber = new();
+        private readonly List<NumberFormat> possibleFormats = new();
 
         // A cache for frequently used country-specific regular expressions.
         private readonly RegexCache regexCache = new RegexCache(64);

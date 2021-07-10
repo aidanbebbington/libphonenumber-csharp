@@ -79,8 +79,8 @@ namespace PhoneNumbers
         public const int LeadingZeroPossibleFieldNumber = 26;
 
         public const int MobileNumberPortableRegionFieldNumber = 32;
-        private readonly scg.List<NumberFormat> intlNumberFormat_ = new scg.List<NumberFormat>();
-        private readonly scg.List<NumberFormat> numberFormat_ = new scg.List<NumberFormat>();
+        private readonly scg.List<NumberFormat> intlNumberFormat_ = new();
+        private readonly scg.List<NumberFormat> numberFormat_ = new();
 
         public static PhoneMetadata DefaultInstance { get; } = new Builder().BuildPartial();
 
@@ -203,11 +203,11 @@ namespace PhoneNumbers
 
         public NumberFormat GetIntlNumberFormat(int index) => intlNumberFormat_[index];
 
-        public static Builder CreateBuilder() => new Builder();
+        public static Builder CreateBuilder() => new();
 
         public Builder ToBuilder() => CreateBuilder(this);
 
-        public Builder CreateBuilderForType() => new Builder();
+        public Builder CreateBuilderForType() => new();
 
         public static Builder CreateBuilder(PhoneMetadata prototype) => new Builder().MergeFrom(prototype);
 
@@ -218,7 +218,7 @@ namespace PhoneNumbers
         {
             protected Builder ThisBuilder => this;
 
-            protected PhoneMetadata MessageBeingBuilt { get; private set; } = new PhoneMetadata();
+            protected PhoneMetadata MessageBeingBuilt { get; private set; } = new();
 
             public PhoneMetadata DefaultInstanceForType => DefaultInstance;
 
@@ -473,7 +473,7 @@ namespace PhoneNumbers
 
             public Builder Clear()
             {
-                MessageBeingBuilt = new PhoneMetadata();
+                MessageBeingBuilt = new();
                 return this;
             }
 

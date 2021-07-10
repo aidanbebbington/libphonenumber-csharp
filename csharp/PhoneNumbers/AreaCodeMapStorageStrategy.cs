@@ -28,7 +28,7 @@ namespace PhoneNumbers
     public abstract class AreaCodeMapStorageStrategy
     {
         protected int NumOfEntries = 0;
-        protected readonly List<int> PossibleLengths = new List<int>();
+        protected readonly List<int> PossibleLengths = new();
 
         /// <summary>
         /// Gets the phone number prefix located at the provided index.

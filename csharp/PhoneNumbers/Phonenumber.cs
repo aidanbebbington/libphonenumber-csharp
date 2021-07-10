@@ -126,7 +126,7 @@ namespace PhoneNumbers
         {
             protected Builder ThisBuilder => this;
 
-            protected PhoneNumber MessageBeingBuilt { get; private set; } = new PhoneNumber();
+            protected PhoneNumber MessageBeingBuilt { get; private set; } = new();
 
             public PhoneNumber DefaultInstanceForType => DefaultInstance;
 
@@ -197,7 +197,7 @@ namespace PhoneNumbers
 
             public Builder Clear()
             {
-                MessageBeingBuilt = new PhoneNumber();
+                MessageBeingBuilt = new();
                 return this;
             }
 

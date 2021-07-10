@@ -25,12 +25,12 @@ namespace PhoneNumbers
 
     public class Locale
     {
-        public static readonly Locale English = new Locale("en", "GB");
-        public static readonly Locale French = new Locale("fr", "FR");
-        public static readonly Locale German = new Locale("de", "DE");
-        public static readonly Locale Italian = new Locale("it", "IT");
-        public static readonly Locale Korean = new Locale("ko", "KR");
-        public static readonly Locale SimplifiedChinese = new Locale("zh", "CN");
+        public static readonly Locale English = new("en", "GB");
+        public static readonly Locale French = new("fr", "FR");
+        public static readonly Locale German = new("de", "DE");
+        public static readonly Locale Italian = new("it", "IT");
+        public static readonly Locale Korean = new("ko", "KR");
+        public static readonly Locale SimplifiedChinese = new("zh", "CN");
 
         public readonly string Language;
         public readonly string Country;
@@ -84,7 +84,7 @@ namespace PhoneNumbers
     {
         private static PhoneNumberOfflineGeocoder instance;
         private const string MAPPING_DATA_DIRECTORY = "geocoding.";
-        private static readonly object ThisLock = new object();
+        private static readonly object ThisLock = new();
 
         private readonly PhoneNumberUtil phoneUtil = PhoneNumberUtil.GetInstance();
         private readonly string phonePrefixDataDirectory;
@@ -96,7 +96,7 @@ namespace PhoneNumbers
 
         // A mapping from countryCallingCode_lang to the corresponding phone prefix map that has been
         // loaded.
-        private readonly Dictionary<string, AreaCodeMap> availablePhonePrefixMaps = new Dictionary<string, AreaCodeMap>();
+        private readonly Dictionary<string, AreaCodeMap> availablePhonePrefixMaps = new();
 
         // @VisibleForTesting
         public PhoneNumberOfflineGeocoder(string phonePrefixDataDirectory, Assembly asm = null)
@@ -127,7 +127,7 @@ namespace PhoneNumbers
                     files[country] = languages = new HashSet<string>();
                 languages.Add(language);
             }
-            mappingFileProvider = new MappingFileProvider();
+            mappingFileProvider = new();
             mappingFileProvider.ReadFileConfigs(files);
             this.assembly = asm;
             this.phonePrefixDataDirectory = prefix;

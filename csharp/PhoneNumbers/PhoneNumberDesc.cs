@@ -19,8 +19,8 @@ namespace PhoneNumbers
         public const int PossibleLengthLocalOnlyFieldNumber = 10;
 
         public const int ExampleNumberFieldNumber = 6;
-        private readonly List<int> possibleLength_ = new List<int>();
-        private readonly List<int> possibleLengthLocalOnly_ = new List<int>();
+        private readonly List<int> possibleLength_ = new();
+        private readonly List<int> possibleLengthLocalOnly_ = new();
 
         public static PhoneNumberDesc DefaultInstance { get; } = new Builder().BuildPartial();
 
@@ -50,11 +50,11 @@ namespace PhoneNumbers
 
         public int GetPossibleLengthLocalOnly(int index) => possibleLengthLocalOnly_[index];
 
-        public static Builder CreateBuilder() => new Builder();
+        public static Builder CreateBuilder() => new();
 
         public Builder ToBuilder() => CreateBuilder(this);
 
-        public Builder CreateBuilderForType() => new Builder();
+        public Builder CreateBuilderForType() => new();
 
         public static Builder CreateBuilder(PhoneNumberDesc prototype)
         {
@@ -68,7 +68,7 @@ namespace PhoneNumbers
         {
             protected Builder ThisBuilder => this;
 
-            protected PhoneNumberDesc MessageBeingBuilt { get; private set; } = new PhoneNumberDesc();
+            protected PhoneNumberDesc MessageBeingBuilt { get; private set; } = new();
 
             public PhoneNumberDesc DefaultInstanceForType => DefaultInstance;
 
@@ -99,7 +99,7 @@ namespace PhoneNumbers
 
             public Builder Clear()
             {
-                MessageBeingBuilt = new PhoneNumberDesc();
+                MessageBeingBuilt = new();
                 return this;
             }
 

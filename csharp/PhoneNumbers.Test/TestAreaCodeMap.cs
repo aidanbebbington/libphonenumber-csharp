@@ -27,8 +27,8 @@ namespace PhoneNumbers.Test
     [Collection("TestMetadataTestCase")]
     public class TestAreaCodeMap
     {
-        private readonly AreaCodeMap areaCodeMapForUS = new AreaCodeMap();
-        private readonly AreaCodeMap areaCodeMapForIT = new AreaCodeMap();
+        private readonly AreaCodeMap areaCodeMapForUS = new();
+        private readonly AreaCodeMap areaCodeMapForIT = new();
 
         public TestAreaCodeMap()
         {

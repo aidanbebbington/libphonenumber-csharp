@@ -22,7 +22,7 @@ namespace PhoneNumbers
         public const int NationalPrefixOptionalWhenFormattingFieldNumber = 6;
 
         public const int DomesticCarrierCodeFormattingRuleFieldNumber = 5;
-        private readonly List<string> leadingDigitsPattern_ = new List<string>();
+        private readonly List<string> leadingDigitsPattern_ = new();
 
         public static NumberFormat DefaultInstance { get; } = new Builder().BuildPartial();
 
@@ -58,11 +58,11 @@ namespace PhoneNumbers
 
         public string GetLeadingDigitsPattern(int index) => leadingDigitsPattern_[index];
 
-        public static Builder CreateBuilder() => new Builder();
+        public static Builder CreateBuilder() => new();
 
         public Builder ToBuilder() => CreateBuilder(this);
 
-        public Builder CreateBuilderForType() => new Builder();
+        public Builder CreateBuilderForType() => new();
 
         public static Builder CreateBuilder(NumberFormat prototype)
         {
@@ -76,7 +76,7 @@ namespace PhoneNumbers
         {
             protected Builder ThisBuilder => this;
 
-            protected NumberFormat MessageBeingBuilt { get; private set; } = new NumberFormat();
+            protected NumberFormat MessageBeingBuilt { get; private set; } = new();
 
             public NumberFormat DefaultInstanceForType => DefaultInstance;
 
@@ -128,7 +128,7 @@ namespace PhoneNumbers
 
             public Builder Clear()
             {
-                MessageBeingBuilt = new NumberFormat();
+                MessageBeingBuilt = new();
                 return this;
             }
 

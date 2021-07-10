@@ -66,10 +66,10 @@ namespace PhoneNumbers
         // The set of regions the library supports.
         // There are roughly 240 of them and we set the initial capacity of the HashSet to 320 to offer a
         // load factor of roughly 0.75.
-        private readonly HashSet<string> supportedRegions = new HashSet<string>();
+        private readonly HashSet<string> supportedRegions = new();
 
         // The set of regions that share country calling code 1.
-        private readonly HashSet<string> nanpaRegions = new HashSet<string>();
+        private readonly HashSet<string> nanpaRegions = new();
         private const int NANPA_COUNTRY_CODE = 1;
 
         // The prefix that needs to be inserted in front of a Colombian landline number when dialed from
@@ -273,7 +273,7 @@ namespace PhoneNumbers
 
         static PhoneNumberUtil()
         {
-            ThisLock = new object();
+            ThisLock = new();
 
             const string asciiDigitMappings = "0123456789";
 
@@ -382,18 +382,17 @@ namespace PhoneNumbers
         private static PhoneNumberUtil instance;
 
         // A mapping from a region code to the PhoneMetadata for that region.
-        private readonly Dictionary<string, PhoneMetadata> regionToMetadataMap = new Dictionary<string, PhoneMetadata>();
+        private readonly Dictionary<string, PhoneMetadata> regionToMetadataMap = new();
 
         // A mapping from a country calling code for a non-geographical entity to the PhoneMetadata for
         // that country calling code. Examples of the country calling codes include 800 (International
         // Toll Free Service) and 808 (International Shared Cost Service).
-        private readonly Dictionary<int, PhoneMetadata> countryCodeToNonGeographicalMetadataMap =
-            new Dictionary<int, PhoneMetadata>();
+        private readonly Dictionary<int, PhoneMetadata> countryCodeToNonGeographicalMetadataMap = new();
 
         // A cache for frequently used region-specific regular expressions.
         // As most people use phone numbers primarily from one to two countries, and there are roughly 60
         // regular expressions needed, the initial capacity of 100 offers a rough load factor of 0.75.
-        private readonly RegexCache regexCache = new RegexCache(100);
+        private readonly RegexCache regexCache = new(100);
 
         public const string REGION_CODE_FOR_NON_GEO_ENTITY = "001";
 
@@ -2566,10 +2565,7 @@ namespace PhoneNumbers
         ///
         /// <returns>An <see cref="AsYouTypeFormatter"/> object, which can be used
         /// to format phone numbers in the specific region "as you type".</returns>
-        public AsYouTypeFormatter GetAsYouTypeFormatter(string regionCode)
-        {
-            return new AsYouTypeFormatter(regionCode, this);
-        }
+        public AsYouTypeFormatter GetAsYouTypeFormatter(string regionCode) => new(regionCode, this);
 
         // Extracts country calling code from fullNumber, returns it and places the remaining number in
         // nationalNumber. It assumes that the leading plus sign or IDD has already been removed. Returns

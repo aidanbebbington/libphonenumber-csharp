@@ -13,7 +13,7 @@ namespace PhoneNumbers
     public class PhoneMetadataCollection
     {
         public const int MetadataFieldNumber = 1;
-        private readonly List<PhoneMetadata> metadata = new List<PhoneMetadata>();
+        private readonly List<PhoneMetadata> metadata = new();
 
         public static PhoneMetadataCollection DefaultInstance { get; } = new Builder().BuildPartial();
 
@@ -32,25 +32,13 @@ namespace PhoneNumbers
             return metadata[index];
         }
 
-        public static Builder CreateBuilder()
-        {
-            return new Builder();
-        }
+        public static Builder CreateBuilder() =>  new();
 
-        public Builder ToBuilder()
-        {
-            return CreateBuilder(this);
-        }
+        public Builder ToBuilder() => CreateBuilder(this);
 
-        public Builder CreateBuilderForType()
-        {
-            return new Builder();
-        }
+        public Builder CreateBuilderForType() => new();
 
-        public static Builder CreateBuilder(PhoneMetadataCollection prototype)
-        {
-            return new Builder().MergeFrom(prototype);
-        }
+        public static Builder CreateBuilder(PhoneMetadataCollection prototype) => new Builder().MergeFrom(prototype);
 
         [DebuggerNonUserCode]
         [CompilerGenerated]
@@ -59,10 +47,9 @@ namespace PhoneNumbers
         {
             protected Builder ThisBuilder => this;
 
-            protected PhoneMetadataCollection MessageBeingBuilt { get; private set; } = new PhoneMetadataCollection();
+            protected PhoneMetadataCollection MessageBeingBuilt { get; private set; } = new();
 
             public PhoneMetadataCollection DefaultInstanceForType => DefaultInstance;
-
 
             public IList<PhoneMetadata> MetadataList => MessageBeingBuilt.metadata;
 
@@ -70,7 +57,7 @@ namespace PhoneNumbers
 
             public Builder Clear()
             {
-                MessageBeingBuilt = new PhoneMetadataCollection();
+                MessageBeingBuilt = new();
                 return this;
             }
 
@@ -102,10 +89,7 @@ namespace PhoneNumbers
                 return this;
             }
 
-            public PhoneMetadata GetMetadata(int index)
-            {
-                return MessageBeingBuilt.GetMetadata(index);
-            }
+            public PhoneMetadata GetMetadata(int index) => MessageBeingBuilt.GetMetadata(index);
 
             public Builder SetMetadata(int index, PhoneMetadata value)
             {

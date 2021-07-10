@@ -29,13 +29,13 @@ namespace PhoneNumbers
         private readonly int size;
         private readonly LinkedList<string> lru;
         private readonly Dictionary<string, Entry> cache;
-        private readonly object regexLock = new object();
+        private readonly object regexLock = new();
 
         public RegexCache(int size)
         {
             this.size = size;
-            cache = new Dictionary<string, Entry>(size);
-            lru = new LinkedList<string>();
+            cache = new(size);
+            lru = new();
         }
 
         public PhoneRegex GetPatternForRegex(string regex)
