@@ -137,7 +137,7 @@ namespace PhoneNumbers
                 "(?:" + leadClass + punctuation + ")" + leadLimit +
                 digitSequence + "(?:" + punctuation + digitSequence + ")" + blockLimit +
                 "(?:" + PhoneNumberUtil.ExtnPatternsForMatching + ")?",
-                PhoneNumberUtil.RegexFlags);
+                PhoneNumberUtil.REGEX_FLAGS);
         }
 
         /** Returns a regular expression quantifier with an upper and lower limit. */
@@ -247,7 +247,10 @@ namespace PhoneNumbers
         /// combining marks should also return true since we assume they have been added to a preceding
         /// Latin character.
         /// </summary>
-        public static bool IsLatinLetter(char letter)
+        [Obsolete("This method was public to be @VisibleForTesting, it will be moved to internal in a future release.")]
+        public static bool IsLatinLetter(char letter) => IsLatinLetterInternal(letter);
+
+        internal static bool IsLatinLetterInternal(char letter)
         {
             // Combining marks are a subset of non-spacing-mark.
             if (!char.IsLetter(letter) && CharUnicodeInfo.GetUnicodeCategory(letter) != UnicodeCategory.NonSpacingMark)
@@ -410,7 +413,7 @@ namespace PhoneNumbers
                     {
                         var previousChar = text[offset - 1];
                         // We return null if it is a latin letter or an invalid punctuation symbol.
-                        if (IsInvalidPunctuationSymbol(previousChar) || IsLatinLetter(previousChar))
+                        if (IsInvalidPunctuationSymbol(previousChar) || IsLatinLetterInternal(previousChar))
                         {
                             return null;
                         }
@@ -419,7 +422,7 @@ namespace PhoneNumbers
                     if (lastCharIndex < text.Length)
                     {
                         var nextChar = text[lastCharIndex];
-                        if (IsInvalidPunctuationSymbol(nextChar) || IsLatinLetter(nextChar))
+                        if (IsInvalidPunctuationSymbol(nextChar) || IsLatinLetterInternal(nextChar))
                         {
                             return null;
                         }
@@ -697,7 +700,7 @@ namespace PhoneNumbers
                 var rawInput = new StringBuilder(rawInputCopy);
                 // Check if we found a national prefix and/or carrier code at the start of the raw input, and
                 // return the result.
-                return util.MaybeStripNationalPrefixAndCarrierCode(rawInput, metadata, null);
+                return util.MaybeStripNationalPrefixAndCarrierCodeInternal(rawInput, metadata, null);
             }
             return true;
         }

@@ -15,7 +15,10 @@
  */
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace PhoneNumbers
 {
@@ -25,10 +28,10 @@ namespace PhoneNumbers
     /// provided data.
     /// <!-- @author Philippe Liard -->
     /// </summary>
-    public abstract class AreaCodeMapStorageStrategy
+    public abstract class PhonePrefixMapStorageStrategy
     {
         protected int NumOfEntries = 0;
-        protected readonly List<int> PossibleLengths = new List<int>();
+        protected readonly SortedSet<int> PossibleLengths = new SortedSet<int>();
 
         /// <summary>
         /// Gets the phone number prefix located at the provided index.
@@ -54,7 +57,11 @@ namespace PhoneNumbers
         /// </summary>
         /// <param name="sortedAreaCodeMap">A sorted map that maps phone number prefixes including country
         /// calling code to description strings.</param>
+#if !NET35
+        public abstract void ReadFromSortedMap(ImmutableSortedDictionary<int, string> sortedAreaCodeMap);
+#else
         public abstract void ReadFromSortedMap(SortedDictionary<int, string> sortedAreaCodeMap);
+#endif
 
         /// <summary>
         /// The number of entries contained in the area code map.
@@ -69,9 +76,9 @@ namespace PhoneNumbers
         /// The set containing the possible lengths of prefixes.
         /// </summary>
         /// <returns>The set containing the possible lengths of prefixes.</returns>
-        public List<int> GetPossibleLengths()
+        public ImmutableSortedSet<int> GetPossibleLengths()
         {
-            return PossibleLengths;
+            return PossibleLengths.ToImmutableSortedSet();
         }
 
         public override string ToString()
@@ -87,5 +94,7 @@ namespace PhoneNumbers
             return output.ToString();
         }
 
+        public abstract Task WriteExternal(Stream stream);
+        public abstract Task ReadExternal(Stream stream);
     }
 }

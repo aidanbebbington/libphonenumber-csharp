@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>C# port of Google's common Java, C++ and Javascript library for parsing, formatting, storing and validating international phone numbers. http://code.google.com/p/libphonenumber/</Description>
@@ -7,7 +7,7 @@
     <PackageId>libphonenumber-csharp</PackageId>
     <VersionPrefix>$(APPVEYOR_BUILD_VERSION)</VersionPrefix>
     <Authors>Patrick Mézard;Tom Clegg;Jarrod Alexander;Google;libphonenumber contributors</Authors>
-    <TargetFrameworks>net35;net40;net46;netstandard1.3;netstandard2.0;portable-net45+win8+wpa81+wp8</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <LangVersion>8.0</LangVersion>
     <AssemblyName>PhoneNumbers</AssemblyName>
     <PackageId>libphonenumber-csharp</PackageId>

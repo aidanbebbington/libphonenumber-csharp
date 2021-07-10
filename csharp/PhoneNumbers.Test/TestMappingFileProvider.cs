@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Xunit;
 
 namespace PhoneNumbers.Test
@@ -31,13 +32,13 @@ namespace PhoneNumbers.Test
 
         public TestMappingFileProvider()
         {
-            var mapping = new SortedDictionary<int, HashSet<string>>
+            var mapping = new SortedDictionary<int, ImmutableHashSet<string>>
             {
-                [1] = new HashSet<string>(new[] {"en"}),
-                [86] = new HashSet<string>(new[] {"zh", "en", "zh_Hant"}),
-                [41] = new HashSet<string>(new[] {"de", "fr", "it", "rm"}),
-                [65] = new HashSet<string>(new[] {"en", "zh_Hans", "ms", "ta"})
-            };
+                [1] = new[] {"en"}.ToImmutableHashSet(),
+                [86] = new[] {"zh", "en", "zh_Hant"}.ToImmutableHashSet(),
+                [41] = new[] {"de", "fr", "it", "rm"}.ToImmutableHashSet(),
+                [65] = new[] {"en", "zh_Hans", "ms", "ta"}.ToImmutableHashSet()
+            }.ToImmutableSortedDictionary();
             mappingProvider.ReadFileConfigs(mapping);
         }
 

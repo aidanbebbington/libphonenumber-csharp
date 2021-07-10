@@ -27,7 +27,7 @@ namespace PhoneNumbers.Test
     public class TestPhoneNumberOfflineGeocoder
     {
         private static readonly PhoneNumberOfflineGeocoder geocoder =
-            new PhoneNumberOfflineGeocoder("geocoding.", typeof(TestPhoneNumberOfflineGeocoder).Assembly);
+            new PhoneNumberOfflineGeocoder("geocoding.");
 
         // Set up some test numbers to re-use.
         private static readonly PhoneNumber KONumber1 =

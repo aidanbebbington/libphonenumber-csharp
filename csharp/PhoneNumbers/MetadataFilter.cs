@@ -17,6 +17,9 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
+#if !NET35
+using System.Collections.Immutable;
+#endif
 
 namespace PhoneNumbers
 {
@@ -40,7 +43,11 @@ namespace PhoneNumbers
         // Currently we support only one non-primitive type and the depth of the "family tree" is 2,
         // meaning a field may have only direct descendants, who may not have descendants of their own. If
         // this changes, the blacklist handling in this class should also change.
+#if !NET35
+        internal static readonly ImmutableSortedSet<string> ExcludableParentFields = new []
+#else
         internal static readonly SortedSet<string> ExcludableParentFields = new SortedSet<string>
+#endif
         {
             "fixedLine",
             "mobile",
@@ -58,21 +65,37 @@ namespace PhoneNumbers
             "carrierSpecific",
             "smsServices",
             "noInternationalDialling"
-        };
+        }
+#if !NET35
+        .ToImmutableSortedSet()
+#endif
+        ;
 
         // Note: If this set changes, the descHasData implementation must change in PhoneNumberUtil.
         // The current implementation assumes that all PhoneNumberDesc fields are present here, since it
         // "clears" a PhoneNumberDesc field by simply clearing all of the fields under it. See the comment
         // above, about all 3 sets, for more about these fields.
+#if !NET35
+        internal static readonly ImmutableSortedSet<string> ExcludableChildFields = new []
+#else
         internal static readonly SortedSet<string> ExcludableChildFields = new SortedSet<string>
+#endif
         {
             "nationalNumberPattern",
             "possibleLength",
             "possibleLengthLocalOnly",
             "exampleNumber"
-        };
+        }
+#if !NET35
+            .ToImmutableSortedSet()
+#endif
+            ;
 
+#if !NET35
+        internal static readonly ImmutableSortedSet<string> ExcludableChildlessFields = new []
+#else
         internal static readonly SortedSet<string> ExcludableChildlessFields = new SortedSet<string>
+#endif
         {
             "preferredInternationalPrefix",
             "nationalPrefix",
@@ -82,12 +105,22 @@ namespace PhoneNumbers
             "mainCountryForCode",
             "leadingZeroPossible",
             "mobileNumberPortableRegion"
-        };
+        }
+#if !NET35
+            .ToImmutableSortedSet()
+#endif
+            ;
 
+#if !NET35
+        private readonly ImmutableDictionary<string, ImmutableSortedSet<string>> blacklist;
+
+        internal MetadataFilter(ImmutableDictionary<string, ImmutableSortedSet<string>> blacklist)
+#else
         private readonly Dictionary<string, SortedSet<string>> blacklist;
 
-        // @VisibleForTesting
         internal MetadataFilter(Dictionary<string, SortedSet<string>> blacklist)
+#endif
+
         {
             this.blacklist = blacklist;
         }
@@ -100,8 +133,12 @@ namespace PhoneNumbers
         internal static MetadataFilter ForSpecialBuild() => new MetadataFilter(ComputeComplement(ParseFieldMapFromString("mobile")));
 
         // Empty blacklist, meaning we filter nothing.
-        internal static MetadataFilter EmptyFilter() => new MetadataFilter(new Dictionary<string, SortedSet<string>>());
-
+        internal static MetadataFilter EmptyFilter() => new MetadataFilter(
+#if !NET35
+            ImmutableDictionary<string, ImmutableSortedSet<string>>.Empty);
+#else
+            new Dictionary<string, SortedSet<string>>();
+#endif
         public override bool Equals(object obj)
             => blacklist.Count == ((MetadataFilter) obj)?.blacklist?.Count &&
                blacklist.All(kvp =>
@@ -187,7 +224,11 @@ namespace PhoneNumbers
          * the sets of excludable fields. We also throw Exception for empty strings since such
          * strings should be treated as a special case by the flag checking code and not passed here.
          */
+#if !NET35
+        internal static ImmutableDictionary<string, ImmutableSortedSet<string>> ParseFieldMapFromString(string str)
+#else
         internal static Dictionary<string, SortedSet<string>> ParseFieldMapFromString(string str)
+#endif
         {
             if (str == null)
                 throw new Exception("Null string should not be passed to ParseFieldMapFromString");
@@ -271,20 +312,34 @@ namespace PhoneNumbers
 				}
 			}
 
-            return fieldMap;
+            return fieldMap
+#if !NET35
+                .ToImmutableDictionary(item => item.Key, item => item.Value.ToImmutableSortedSet());
+#endif
         }
 
         // Does not check that legal tokens are used, assuming that fieldMap is constructed using
         // ParseFieldMapFromString(String) which does check. If fieldMap Contains illegal tokens or parent
         // fields with no children or other unexpected state, the behavior of this function is undefined.
+#if !NET35
+        internal static ImmutableDictionary<string, ImmutableSortedSet<string>> ComputeComplement(
+            IDictionary<string, ImmutableSortedSet<string>> fieldMap)
+        {
+            var complement = new Dictionary<string, ImmutableSortedSet<string>>();
+#else
         internal static Dictionary<string, SortedSet<string>> ComputeComplement(
             IDictionary<string, SortedSet<string>> fieldMap)
         {
             var complement = new Dictionary<string, SortedSet<string>>();
+#endif
             foreach (var parent in ExcludableParentFields)
                 if (!fieldMap.TryGetValue(parent, out var otherChildren))
                 {
-                    complement.Add(parent, new SortedSet<string>(ExcludableChildFields));
+                    complement.Add(parent, ExcludableChildFields
+#if !NET35
+                        .ToImmutableSortedSet()
+#endif
+                    );
                 }
                 else
                 {
@@ -292,17 +347,30 @@ namespace PhoneNumbers
                     // parent as a key.
                     if (otherChildren.Count != ExcludableChildFields.Count)
                     {
-                        var children = new SortedSet<string>();
-                        foreach (var child in ExcludableChildFields)
-                            if (!otherChildren.Contains(child))
-                                children.Add(child);
+                        var children = ExcludableChildFields.Where(child => !otherChildren.Contains(child))
+#if !NET35
+                            .ToImmutableSortedSet()
+#endif
+                            ;
                         complement.Add(parent, children);
                     }
                 }
-            foreach (var childlessField in ExcludableChildlessFields)
-                if (!fieldMap.ContainsKey(childlessField))
-                    complement.Add(childlessField, new SortedSet<string>());
+
+            foreach (var childlessField in ExcludableChildlessFields.Where(childlessField =>
+                !fieldMap.ContainsKey(childlessField)))
+            {
+                complement.Add(childlessField,
+#if !NET35
+                    ImmutableSortedSet<string>.Empty);
+            }
+
+            return complement.ToImmutableDictionary();
+#else
+                    new SortedSet<string>();
+            }
+
             return complement;
+#endif
         }
 
         internal bool ShouldDrop(string parent, string child)

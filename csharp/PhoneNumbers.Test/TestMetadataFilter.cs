@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Xunit;
 
@@ -33,35 +34,44 @@ namespace PhoneNumbers.Test
         private const string INTERNATIONAL_PREFIX = "0[01]";
         private const string PREFERRED_INTERNATIONAL_PREFIX = "00";
         private const string NATIONAL_NUMBER_PATTERN = "\\d{8}";
+        private const string EXAMPLE_NUMBER = "10123456";
         private static readonly int[] PossibleLengths = {8};
         private static readonly int[] PossibleLengthsLocalOnly = {5, 6};
-        private const string EXAMPLE_NUMBER = "10123456";
+
+        private static readonly ImmutableSortedSet<string> ExcludableChildFieldsSet =
+            MetadataFilter.ExcludableChildFields.ToImmutableSortedSet();
+
+        private static readonly ImmutableSortedSet<string> ExampleNumberSet =
+            new[] {"exampleNumber"}.ToImmutableSortedSet();
+
+        private static readonly ImmutableSortedSet<string> NationalNumberPatternSet =
+            new[] {"nationalNumberPattern"}.ToImmutableSortedSet();
 
         // If this behavior changes then consider whether the change in the blacklist is intended, or you
         // should change the special build configuration. Also look into any change in the size of the
         // build.
         [Fact]
-        public void TestForLiteBuild()
+        public void ForLiteBuild()
         {
-            var blacklist = new Dictionary<string, SortedSet<string>>
+            var blacklist = new Dictionary<string, ImmutableSortedSet<string>>()
             {
-                { "fixedLine", new SortedSet<string> { "exampleNumber" } },
-                { "mobile", new SortedSet<string> { "exampleNumber" } },
-                { "tollFree", new SortedSet<string> { "exampleNumber" } },
-                { "premiumRate", new SortedSet<string> { "exampleNumber" } },
-                { "sharedCost", new SortedSet<string> { "exampleNumber" } },
-                { "personalNumber", new SortedSet<string> { "exampleNumber" } },
-                { "voip", new SortedSet<string> { "exampleNumber" } },
-                { "pager", new SortedSet<string> { "exampleNumber" } },
-                { "uan", new SortedSet<string> { "exampleNumber" } },
-                { "emergency", new SortedSet<string> { "exampleNumber" } },
-                { "voicemail", new SortedSet<string> { "exampleNumber" } },
-                { "shortCode", new SortedSet<string> { "exampleNumber" } },
-                { "standardRate", new SortedSet<string> { "exampleNumber" } },
-                { "carrierSpecific", new SortedSet<string> { "exampleNumber" } },
-                { "smsServices", new SortedSet<string> { "exampleNumber" } },
-                { "noInternationalDialling", new SortedSet<string> { "exampleNumber" } }
-            };
+                { "fixedLine", ExampleNumberSet },
+                { "mobile", ExampleNumberSet },
+                { "tollFree", ExampleNumberSet },
+                { "premiumRate", ExampleNumberSet },
+                { "sharedCost", ExampleNumberSet },
+                { "personalNumber", ExampleNumberSet },
+                { "voip", ExampleNumberSet },
+                { "pager", ExampleNumberSet },
+                { "uan", ExampleNumberSet },
+                { "emergency", ExampleNumberSet },
+                { "voicemail", ExampleNumberSet },
+                { "shortCode", ExampleNumberSet },
+                { "standardRate", ExampleNumberSet },
+                { "carrierSpecific", ExampleNumberSet },
+                { "smsServices", ExampleNumberSet },
+                { "noInternationalDialling", ExampleNumberSet }
+            }.ToImmutableDictionary();
 
             Assert.Equal(MetadataFilter.ForLiteBuild(), new MetadataFilter(blacklist));
         }
@@ -70,62 +80,62 @@ namespace PhoneNumbers.Test
 // should change the special build configuration. Also look into any change in the size of the
 // build.
         [Fact]
-        public void TestForSpecialBuild()
+        public void ForSpecialBuild()
         {
-            var blacklist = new Dictionary<string, SortedSet<string>>
+            var blacklist = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "tollFree", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "premiumRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "sharedCost", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "personalNumber", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "voip", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "pager", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "uan", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "emergency", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "voicemail", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "shortCode", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "standardRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "carrierSpecific", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "smsServices", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
+                { "fixedLine", ExcludableChildFieldsSet },
+                { "tollFree", ExcludableChildFieldsSet },
+                { "premiumRate", ExcludableChildFieldsSet },
+                { "sharedCost", ExcludableChildFieldsSet },
+                { "personalNumber", ExcludableChildFieldsSet },
+                { "voip", ExcludableChildFieldsSet },
+                { "pager", ExcludableChildFieldsSet },
+                { "uan", ExcludableChildFieldsSet },
+                { "emergency", ExcludableChildFieldsSet },
+                { "voicemail", ExcludableChildFieldsSet },
+                { "shortCode", ExcludableChildFieldsSet },
+                { "standardRate", ExcludableChildFieldsSet },
+                { "carrierSpecific", ExcludableChildFieldsSet },
+                { "smsServices", ExcludableChildFieldsSet },
                 {
                     "noInternationalDialling",
-                    new SortedSet<string>(MetadataFilter.ExcludableChildFields)
+                    ExcludableChildFieldsSet
                 },
-                { "preferredInternationalPrefix", new SortedSet<string>() },
-                { "nationalPrefix", new SortedSet<string>() },
-                { "preferredExtnPrefix", new SortedSet<string>() },
-                { "nationalPrefixTransformRule", new SortedSet<string>() },
-                { "sameMobileAndFixedLinePattern", new SortedSet<string>() },
-                { "mainCountryForCode", new SortedSet<string>() },
-                { "leadingZeroPossible", new SortedSet<string>() },
-                { "mobileNumberPortableRegion", new SortedSet<string>() }
-            };
+                { "preferredInternationalPrefix", ImmutableSortedSet<string>.Empty },
+                { "nationalPrefix", ImmutableSortedSet<string>.Empty },
+                { "preferredExtnPrefix", ImmutableSortedSet<string>.Empty },
+                { "nationalPrefixTransformRule", ImmutableSortedSet<string>.Empty },
+                { "sameMobileAndFixedLinePattern", ImmutableSortedSet<string>.Empty },
+                { "mainCountryForCode", ImmutableSortedSet<string>.Empty },
+                { "leadingZeroPossible", ImmutableSortedSet<string>.Empty },
+                { "mobileNumberPortableRegion", ImmutableSortedSet<string>.Empty }
+            }.ToImmutableDictionary();
 
             Assert.Equal(MetadataFilter.ForSpecialBuild(), new MetadataFilter(blacklist));
         }
 
         [Fact]
-        public void TestEmptyFilter()
+        public void EmptyFilter()
         {
             Assert.Equal(MetadataFilter.EmptyFilter(),
-                new MetadataFilter(new Dictionary<string, SortedSet<string>>()));
+                new MetadataFilter(ImmutableDictionary<string, ImmutableSortedSet<string>>.Empty));
         }
 
         [Fact]
-        public void testParseFieldMapFromString_parentAsGroup()
+        public void ParseFieldMapFromString_parentAsGroup()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
             {
                 {
                     "fixedLine",
-                    new SortedSet<string>(new List<string>
+                    new []
             {
                 "nationalNumberPattern",
                 "possibleLength",
                 "possibleLengthLocalOnly",
                 "exampleNumber"
-            })
+            }.ToImmutableSortedSet()
                 }
             };
 
@@ -133,65 +143,65 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void testParseFieldMapFromString_childAsGroup()
+        public void ParseFieldMapFromString_childAsGroup()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string> { "exampleNumber" } },
-                { "mobile", new SortedSet<string> { "exampleNumber" } },
-                { "tollFree", new SortedSet<string> { "exampleNumber" } },
-                { "premiumRate", new SortedSet<string> { "exampleNumber" } },
-                { "sharedCost", new SortedSet<string> { "exampleNumber" } },
-                { "personalNumber", new SortedSet<string> { "exampleNumber" } },
-                { "voip", new SortedSet<string> { "exampleNumber" } },
-                { "pager", new SortedSet<string> { "exampleNumber" } },
-                { "uan", new SortedSet<string> { "exampleNumber" } },
-                { "emergency", new SortedSet<string> { "exampleNumber" } },
-                { "voicemail", new SortedSet<string> { "exampleNumber" } },
-                { "shortCode", new SortedSet<string> { "exampleNumber" } },
-                { "standardRate", new SortedSet<string> { "exampleNumber" } },
-                { "carrierSpecific", new SortedSet<string> { "exampleNumber" } },
-                { "smsServices", new SortedSet<string> { "exampleNumber" } },
-                { "noInternationalDialling", new SortedSet<string> { "exampleNumber" } }
-            };
+                { "fixedLine", ExampleNumberSet },
+                { "mobile", ExampleNumberSet },
+                { "tollFree", ExampleNumberSet },
+                { "premiumRate", ExampleNumberSet },
+                { "sharedCost", ExampleNumberSet },
+                { "personalNumber", ExampleNumberSet },
+                { "voip", ExampleNumberSet },
+                { "pager", ExampleNumberSet },
+                { "uan", ExampleNumberSet },
+                { "emergency", ExampleNumberSet },
+                { "voicemail", ExampleNumberSet },
+                { "shortCode", ExampleNumberSet },
+                { "standardRate", ExampleNumberSet },
+                { "carrierSpecific", ExampleNumberSet },
+                { "smsServices", ExampleNumberSet },
+                { "noInternationalDialling", ExampleNumberSet }
+            }.ToImmutableDictionary();
 
             Assert.Equal(MetadataFilter.ParseFieldMapFromString("exampleNumber"), fieldMap);
         }
 
         [Fact]
-        public void testParseFieldMapFromString_childlessFieldAsGroup()
+        public void ParseFieldMapFromString_childlessFieldAsGroup()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "nationalPrefix", new SortedSet<string>() }
+                { "nationalPrefix", ImmutableSortedSet<string>.Empty }
             };
 
             Assert.Equal(MetadataFilter.ParseFieldMapFromString("nationalPrefix"), fieldMap);
         }
 
         [Fact]
-        public void testParseFieldMapFromString_parentWithOneChildAsGroup()
+        public void ParseFieldMapFromString_parentWithOneChildAsGroup()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string> { "exampleNumber" } }
+                { "fixedLine", new[] { "exampleNumber" }.ToImmutableSortedSet() }
             };
 
             Assert.Equal(MetadataFilter.ParseFieldMapFromString("fixedLine(exampleNumber)"), fieldMap);
         }
 
         [Fact]
-        public void testParseFieldMapFromString_parentWithTwoChildrenAsGroup()
+        public void ParseFieldMapFromString_parentWithTwoChildrenAsGroup()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
             {
                 {
                     "fixedLine",
-                    new SortedSet<string>(new List<string>
+                    new List<string>
             {
                 "exampleNumber",
                 "possibleLength"
-            })
+            }.ToImmutableSortedSet()
                 }
             };
 
@@ -201,59 +211,54 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void testParseFieldMapFromString_mixOfGroups()
+        public void ParseFieldMapFromString_mixOfGroups()
         {
-            var fieldMap = new Dictionary<string, SortedSet<string>>
-            {
+            var fieldMap = new Dictionary<string, ImmutableSortedSet<string>>
                 {
-                    "uan",
-                    new SortedSet<string>(new List<string>
-            {
-                "possibleLength",
-                "exampleNumber",
-                "possibleLengthLocalOnly",
-                "nationalNumberPattern"
-            })
-                },
-                {
-                    "pager",
-                    new SortedSet<string>(new List<string>
-            {
-                "exampleNumber",
-                "nationalNumberPattern"
-            })
-                },
-                {
-                    "fixedLine",
-                    new SortedSet<string>(new List<string>
-            {
-                "nationalNumberPattern",
-                "possibleLength",
-                "possibleLengthLocalOnly",
-                "exampleNumber"
-            })
-                },
-                { "nationalPrefix", new SortedSet<string>() },
-                { "mobile", new SortedSet<string> { "nationalNumberPattern" } },
-                { "tollFree", new SortedSet<string> { "nationalNumberPattern" } },
-                { "premiumRate", new SortedSet<string> { "nationalNumberPattern" } },
-                { "sharedCost", new SortedSet<string> { "nationalNumberPattern" } },
-                { "personalNumber", new SortedSet<string> { "nationalNumberPattern" } },
-                { "voip", new SortedSet<string> { "nationalNumberPattern" } },
-                { "emergency", new SortedSet<string> { "nationalNumberPattern" } },
-                { "voicemail", new SortedSet<string> { "nationalNumberPattern" } },
-                { "shortCode", new SortedSet<string> { "nationalNumberPattern" } },
-                { "standardRate", new SortedSet<string> { "nationalNumberPattern" } },
-                { "carrierSpecific", new SortedSet<string> { "nationalNumberPattern" } },
-                { "smsServices", new SortedSet<string> { "nationalNumberPattern" } },
-                {
-                    "noInternationalDialling",
-                    new SortedSet<string>(new List<string>
-            {
-                "nationalNumberPattern"
-            })
+                    {
+                        "uan",
+                        new []
+                        {
+                            "possibleLength",
+                            "exampleNumber",
+                            "possibleLengthLocalOnly",
+                            "nationalNumberPattern"
+                        }.ToImmutableSortedSet()
+                    },
+                    {
+                        "pager",
+                        new []
+                        {
+                            "exampleNumber",
+                            "nationalNumberPattern"
+                        }.ToImmutableSortedSet()
+                    },
+                    {
+                        "fixedLine",
+                        new []
+                        {
+                            "nationalNumberPattern",
+                            "possibleLength",
+                            "possibleLengthLocalOnly",
+                            "exampleNumber"
+                        }.ToImmutableSortedSet()
+                    },
+                    {"nationalPrefix", ImmutableSortedSet<string>.Empty},
+                    {"mobile", NationalNumberPatternSet},
+                    {"tollFree", NationalNumberPatternSet},
+                    {"premiumRate", NationalNumberPatternSet},
+                    {"sharedCost", NationalNumberPatternSet},
+                    {"personalNumber", NationalNumberPatternSet},
+                    {"voip", NationalNumberPatternSet},
+                    {"emergency", NationalNumberPatternSet},
+                    {"voicemail", NationalNumberPatternSet},
+                    {"shortCode", NationalNumberPatternSet},
+                    {"standardRate", NationalNumberPatternSet},
+                    {"carrierSpecific", NationalNumberPatternSet},
+                    {"smsServices", NationalNumberPatternSet},
+                    {"noInternationalDialling", NationalNumberPatternSet}
                 }
-            };
+                .ToImmutableDictionary();
 
             Assert.Equal(MetadataFilter.ParseFieldMapFromString(
                     "uan(possibleLength,exampleNumber,possibleLengthLocalOnly)"
@@ -269,7 +274,7 @@ namespace PhoneNumbers.Test
         // do their semantics; therefore we allow currently longer expressions, and we allow explicit
         // listing of children, even if these are currently all the children        [Fact]
         [Fact]
-        public void TestParseFieldMapFromString_EquivalentExpressions()
+        public void ParseFieldMapFromString_EquivalentExpressions()
         {
             // Listing all excludable parent fields is equivalent to listing all excludable child fields.
             Assert.Equal(
@@ -388,7 +393,7 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void testParseFieldMapFromString_RuntimeExceptionCases()
+        public void ParseFieldMapFromString_RuntimeExceptionCases()
         {
             // Null input.
             Assert.Throws<Exception>(() => MetadataFilter.ParseFieldMapFromString(null));
@@ -616,116 +621,109 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void testComputeComplement_allAndNothing()
+        public void ComputeComplement_allAndNothing()
         {
-            var map1 = new Dictionary<string, SortedSet<string>>
+            var map1 = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "mobile", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "tollFree", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "premiumRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "sharedCost", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "personalNumber", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "voip", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "pager", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "uan", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "emergency", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "voicemail", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "shortCode", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "standardRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "carrierSpecific", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "smsServices", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
+                { "fixedLine", ExcludableChildFieldsSet },
+                { "mobile", ExcludableChildFieldsSet },
+                { "tollFree", ExcludableChildFieldsSet },
+                { "premiumRate", ExcludableChildFieldsSet },
+                { "sharedCost", ExcludableChildFieldsSet },
+                { "personalNumber", ExcludableChildFieldsSet },
+                { "voip", ExcludableChildFieldsSet },
+                { "pager", ExcludableChildFieldsSet },
+                { "uan", ExcludableChildFieldsSet },
+                { "emergency", ExcludableChildFieldsSet },
+                { "voicemail", ExcludableChildFieldsSet },
+                { "shortCode", ExcludableChildFieldsSet },
+                { "standardRate", ExcludableChildFieldsSet },
+                { "carrierSpecific", ExcludableChildFieldsSet },
+                { "smsServices", ExcludableChildFieldsSet },
                 {
                     "noInternationalDialling",
-                    new SortedSet<string>(MetadataFilter.ExcludableChildFields)
+                    ExcludableChildFieldsSet
                 },
-                { "preferredInternationalPrefix", new SortedSet<string>() },
-                { "nationalPrefix", new SortedSet<string>() },
-                { "preferredExtnPrefix", new SortedSet<string>() },
-                { "nationalPrefixTransformRule", new SortedSet<string>() },
-                { "sameMobileAndFixedLinePattern", new SortedSet<string>() },
-                { "mainCountryForCode", new SortedSet<string>() },
-                { "leadingZeroPossible", new SortedSet<string>() },
-                { "mobileNumberPortableRegion", new SortedSet<string>() }
+                { "preferredInternationalPrefix", ImmutableSortedSet<string>.Empty },
+                { "nationalPrefix", ImmutableSortedSet<string>.Empty },
+                { "preferredExtnPrefix", ImmutableSortedSet<string>.Empty },
+                { "nationalPrefixTransformRule", ImmutableSortedSet<string>.Empty },
+                { "sameMobileAndFixedLinePattern", ImmutableSortedSet<string>.Empty },
+                { "mainCountryForCode", ImmutableSortedSet<string>.Empty },
+                { "leadingZeroPossible", ImmutableSortedSet<string>.Empty },
+                { "mobileNumberPortableRegion", ImmutableSortedSet<string>.Empty }
             };
 
-            var map2 = new Dictionary<string, SortedSet<string>>();
+            var map2 = new Dictionary<string, ImmutableSortedSet<string>>();
 
             Assert.Equal(MetadataFilter.ComputeComplement(map1), map2);
             Assert.Equal(MetadataFilter.ComputeComplement(map2), map1);
         }
 
         [Fact]
-        public void testComputeComplement_inBetween()
+        public void ComputeComplement_inBetween()
         {
-            var map1 = new Dictionary<string, SortedSet<string>>
+            var map1 = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "mobile", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "tollFree", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "premiumRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "emergency", new SortedSet<string> { "nationalNumberPattern" } },
-                { "voicemail", new SortedSet<string>(new List<string> { "possibleLength", "exampleNumber" }) },
-                { "shortCode", new SortedSet<string> { "exampleNumber" } },
-                { "standardRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "carrierSpecific", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "smsServices", new SortedSet<string> { "nationalNumberPattern" } },
-                {
-                    "noInternationalDialling",
-                    new SortedSet<string>(MetadataFilter.ExcludableChildFields)
-                },
-                { "nationalPrefixTransformRule", new SortedSet<string>() },
-                { "sameMobileAndFixedLinePattern", new SortedSet<string>() },
-                { "mainCountryForCode", new SortedSet<string>() },
-                { "leadingZeroPossible", new SortedSet<string>() },
-                { "mobileNumberPortableRegion", new SortedSet<string>() }
+                { "fixedLine", ExcludableChildFieldsSet },
+                { "mobile", ExcludableChildFieldsSet },
+                { "tollFree", ExcludableChildFieldsSet },
+                { "premiumRate", ExcludableChildFieldsSet },
+                { "emergency", NationalNumberPatternSet },
+                { "voicemail", new [] { "possibleLength", "exampleNumber" }.ToImmutableSortedSet() },
+                { "shortCode", ExampleNumberSet },
+                { "standardRate", ExcludableChildFieldsSet },
+                { "carrierSpecific", ExcludableChildFieldsSet },
+                { "smsServices", NationalNumberPatternSet },
+                {"noInternationalDialling", ExcludableChildFieldsSet},
+                { "nationalPrefixTransformRule", ImmutableSortedSet<string>.Empty },
+                { "sameMobileAndFixedLinePattern", ImmutableSortedSet<string>.Empty },
+                { "mainCountryForCode", ImmutableSortedSet<string>.Empty },
+                { "leadingZeroPossible", ImmutableSortedSet<string>.Empty },
+                { "mobileNumberPortableRegion", ImmutableSortedSet<string>.Empty }
             };
 
-            var map2 = new Dictionary<string, SortedSet<string>>
+            var map2 = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "sharedCost", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "personalNumber", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "voip", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "pager", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "uan", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
+                {"sharedCost", ExcludableChildFieldsSet},
+                {"personalNumber", ExcludableChildFieldsSet},
+                {"voip", ExcludableChildFieldsSet},
+                {"pager", ExcludableChildFieldsSet},
+                {"uan", ExcludableChildFieldsSet},
                 {
-                    "emergency",
-                    new SortedSet<string>(new List<string>
-            {
-                "possibleLength",
-                "possibleLengthLocalOnly",
-                "exampleNumber"
-            })
+                    "emergency", new[]
+                    {
+                        "possibleLength",
+                        "possibleLengthLocalOnly",
+                        "exampleNumber"
+                    }.ToImmutableSortedSet()
                 },
                 {
-                    "smsServices",
-                    new SortedSet<string>(new List<string>
-            {
-                "possibleLength",
-                "possibleLengthLocalOnly",
-                "exampleNumber"
-            })
+                    "smsServices", new[]
+                    {
+                        "possibleLength",
+                        "possibleLengthLocalOnly",
+                        "exampleNumber"
+                    }.ToImmutableSortedSet()
                 },
                 {
-                    "voicemail",
-                    new SortedSet<string>(new List<string>
-            {
-                "nationalNumberPattern",
-                "possibleLengthLocalOnly"
-            })
+                    "voicemail", new[]
+                    {
+                        "nationalNumberPattern",
+                        "possibleLengthLocalOnly"
+                    }.ToImmutableSortedSet()
                 },
                 {
-                    "shortCode",
-                    new SortedSet<string>(new List<string>
-            {
-                "nationalNumberPattern",
-                "possibleLength",
-                "possibleLengthLocalOnly"
-            })
+                    "shortCode", new[]
+                    {
+                        "nationalNumberPattern",
+                        "possibleLength",
+                        "possibleLengthLocalOnly"
+                    }.ToImmutableSortedSet()
                 },
-                { "preferredInternationalPrefix", new SortedSet<string>() },
-                { "nationalPrefix", new SortedSet<string>() },
-                { "preferredExtnPrefix", new SortedSet<string>() }
+                {"preferredInternationalPrefix", ImmutableSortedSet<string>.Empty},
+                {"nationalPrefix", ImmutableSortedSet<string>.Empty},
+                {"preferredExtnPrefix", ImmutableSortedSet<string>.Empty}
             };
 
             Assert.Equal(MetadataFilter.ComputeComplement(map1), map2);
@@ -733,37 +731,37 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void TestShouldDrop()
+        public void ShouldDrop()
         {
-            var blacklist = new Dictionary<string, SortedSet<string>>
+            var blacklist = new Dictionary<string, ImmutableSortedSet<string>>
             {
-                { "fixedLine", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "mobile", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "tollFree", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "premiumRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "emergency", new SortedSet<string> { "nationalNumberPattern" } },
+                {"fixedLine", ExcludableChildFieldsSet},
+                {"mobile", ExcludableChildFieldsSet},
+                {"tollFree", ExcludableChildFieldsSet},
+                {"premiumRate", ExcludableChildFieldsSet},
+                {"emergency", NationalNumberPatternSet},
                 {
                     "voicemail",
-                    new SortedSet<string>(new List<string>
-            {
-                "possibleLength",
-                "exampleNumber"
-            })
+                    new[]
+                    {
+                        "possibleLength",
+                        "exampleNumber"
+                    }.ToImmutableSortedSet()
                 },
-                { "shortCode", new SortedSet<string> { "exampleNumber" } },
-                { "standardRate", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "carrierSpecific", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
-                { "smsServices", new SortedSet<string>(MetadataFilter.ExcludableChildFields) },
+                {"shortCode", ExampleNumberSet},
+                {"standardRate", ExcludableChildFieldsSet},
+                {"carrierSpecific", ExcludableChildFieldsSet},
+                {"smsServices", ExcludableChildFieldsSet},
                 {
                     "noInternationalDialling",
-                    new SortedSet<string>(MetadataFilter.ExcludableChildFields)
+                    ExcludableChildFieldsSet
                 },
-                { "nationalPrefixTransformRule", new SortedSet<string>() },
-                { "sameMobileAndFixedLinePattern", new SortedSet<string>() },
-                { "mainCountryForCode", new SortedSet<string>() },
-                { "leadingZeroPossible", new SortedSet<string>() },
-                { "mobileNumberPortableRegion", new SortedSet<string>() }
-            };
+                {"nationalPrefixTransformRule", ImmutableSortedSet<string>.Empty},
+                {"sameMobileAndFixedLinePattern", ImmutableSortedSet<string>.Empty},
+                {"mainCountryForCode", ImmutableSortedSet<string>.Empty},
+                {"leadingZeroPossible", ImmutableSortedSet<string>.Empty},
+                {"mobileNumberPortableRegion", ImmutableSortedSet<string>.Empty}
+            }.ToImmutableDictionary();
 
             var filter = new MetadataFilter(blacklist);
             Assert.True(filter.ShouldDrop("fixedLine", "exampleNumber"));
@@ -792,14 +790,14 @@ namespace PhoneNumbers.Test
                 MetadataFilter.ParseFieldMapFromString("uan"))).ShouldDrop("fixedLine", "exampleNumber"));
 
             // Integration tests with an empty blacklist.
-            Assert.False(new MetadataFilter(new Dictionary<string, SortedSet<string>>())
+            Assert.False(new MetadataFilter(ImmutableDictionary<string, ImmutableSortedSet<string>>.Empty)
                 .ShouldDrop("fixedLine", "exampleNumber"));
         }
 
         // Test that a fake PhoneMetadata filtered for liteBuild ends up clearing exactly the expected
         // fields. The lite build is used to clear example_number fields from all PhoneNumberDescs        [Fact]
         [Fact]
-        public void TestFilterMetadata_LiteBuild()
+        public void FilterMetadata_LiteBuild()
         {
             var metadata = FakeArmeniaPhoneMetadata();
 
@@ -831,7 +829,7 @@ namespace PhoneNumbers.Test
         // fields. The special build is used to clear PhoneNumberDescs other than general_desc and mobile,
         // and non-PhoneNumberDesc PhoneMetadata fields that aren't needed for parsing        [Fact]
         [Fact]
-        public void TestFilterMetadata_SpecialBuild()
+        public void FilterMetadata_SpecialBuild()
         {
             var metadata = FakeArmeniaPhoneMetadata();
 
@@ -877,7 +875,7 @@ namespace PhoneNumbers.Test
 
         // Test that filtering a fake PhoneMetadata with the empty MetadataFilter results in no change        [Fact]
         [Fact]
-        public void TestFilterMetadata_EmptyFilter()
+        public void FilterMetadata_EmptyFilter()
         {
             var metadata = FakeArmeniaPhoneMetadata();
 
@@ -906,7 +904,7 @@ namespace PhoneNumbers.Test
         }
 
         [Fact]
-        public void TestIntegrityOfFieldSets()
+        public void IntegrityOfFieldSets()
         {
             var union = new List<string>()
                 .Union(MetadataFilter.ExcludableParentFields)

@@ -1,4 +1,5 @@
 ﻿/*
+/*
  * Copyright (C) 2011 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ #1#
 
 using System.Collections.Generic;
 using Xunit;
@@ -23,7 +24,7 @@ namespace PhoneNumbers.Test
     * Unittests for AreaCodeMap.java
     *
     * @author Shaopeng Jia
-    */
+    #1#
     [Collection("TestMetadataTestCase")]
     public class TestAreaCodeMap
     {
@@ -87,7 +88,7 @@ namespace PhoneNumbers.Test
         public void TestGetSmallerMapStorageChoosesDefaultImpl()
         {
             var mapStorage =
-                new AreaCodeMap().GetSmallerMapStorage(CreateDefaultStorageMapCandidate());
+                new AreaCodeMap().GetSmallerMapStorageInternal(CreateDefaultStorageMapCandidate());
             Assert.False(mapStorage.GetType() == typeof(FlyweightMapStorage));
         }
 
@@ -95,7 +96,7 @@ namespace PhoneNumbers.Test
         public void TestGetSmallerMapStorageChoosesFlyweightImpl()
         {
             var mapStorage =
-                new AreaCodeMap().GetSmallerMapStorage(CreateFlyweightStorageMapCandidate());
+                new AreaCodeMap().GetSmallerMapStorageInternal(CreateFlyweightStorageMapCandidate());
             Assert.True(mapStorage.GetType() == typeof(FlyweightMapStorage));
         }
 
@@ -183,3 +184,4 @@ namespace PhoneNumbers.Test
         }
     }
 }
+*/

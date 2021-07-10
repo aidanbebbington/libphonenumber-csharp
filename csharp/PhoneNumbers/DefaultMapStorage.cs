@@ -16,7 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Threading.Tasks;
+using PhoneNumbers.Internal;
 
 namespace PhoneNumbers
 {
@@ -27,7 +33,7 @@ namespace PhoneNumbers
     *
     * @author Shaopeng Jia
     */
-    public class DefaultMapStorage : AreaCodeMapStorageStrategy
+    public class DefaultMapStorage : PhonePrefixMapStorageStrategy
     {
         private int[] phoneNumberPrefixes;
         private string[] descriptions;
@@ -47,24 +53,72 @@ namespace PhoneNumbers
             return descriptions[index];
         }
 
-        public override void ReadFromSortedMap(SortedDictionary<int, string> sortedAreaCodeMap)
+#if !NET35
+        public override void ReadFromSortedMap(ImmutableSortedDictionary<int, string> areaCodeMap)
+#else
+        public override void ReadFromSortedMap(SortedDictionary<int, string> areaCodeMap)
+#endif
         {
-            NumOfEntries = sortedAreaCodeMap.Count;
+            NumOfEntries = areaCodeMap.Count;
             phoneNumberPrefixes = new int[NumOfEntries];
             descriptions = new string[NumOfEntries];
             var index = 0;
             var possibleLengthsSet = new HashSet<int>();
-            foreach (var prefix in sortedAreaCodeMap.Keys)
+            foreach (var prefix in areaCodeMap.Keys)
             {
                 phoneNumberPrefixes[index] = prefix;
-                descriptions[index] = sortedAreaCodeMap[prefix];
+                descriptions[index] = areaCodeMap[prefix];
                 index++;
                 var lengthOfPrefix = (int)Math.Log10(prefix) + 1;
                 possibleLengthsSet.Add(lengthOfPrefix);
             }
             PossibleLengths.Clear();
-            PossibleLengths.AddRange(possibleLengthsSet);
-            PossibleLengths.Sort();
+            PossibleLengths.UnionWith(possibleLengthsSet);
+        }
+
+        public override Task ReadExternal(Stream stream)
+        {
+            using var binaryReader = new BinaryReader(stream);
+            var dic = new Dictionary<string, string>
+            {
+                {   "24491", "Movicel"},
+                    {"24492", "UNITEL"},
+                    {"24493", "UNITEL"},
+                    {"24494", "UNITEL"},
+                    {"24499", "Movicel"}
+            };
+            NumOfEntries = binaryReader.ReadInt32();
+            phoneNumberPrefixes = new int[NumOfEntries];
+            for (var i = 0; i < NumOfEntries; ++i)
+            {
+                phoneNumberPrefixes[i] = binaryReader.ReadInt32();
+                descriptions[i] = binaryReader.ReadString();
+            }
+
+            for (var i = 0; i < binaryReader.ReadInt32(); ++i)
+            {
+                PossibleLengths.Add(binaryReader.ReadInt32());
+            }
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteExternal(Stream stream)
+        {
+            using var binaryWriter = new BinaryWriter(stream);
+            binaryWriter.Write(NumOfEntries);
+            for (var i = 0; i < NumOfEntries; ++i)
+            {
+                binaryWriter.Write(phoneNumberPrefixes[i]);
+                binaryWriter.Write(descriptions[i]);
+            }
+
+            var sizeOfLengths = PossibleLengths.Count;
+            binaryWriter.Write(sizeOfLengths);
+            foreach (var length in PossibleLengths)
+            {
+                binaryWriter.Write(length);
+            }
+            return Task.CompletedTask;
         }
     }
 }

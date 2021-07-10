@@ -16,8 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace PhoneNumbers
 {
@@ -28,7 +30,7 @@ namespace PhoneNumbers
     *
     * @author Philippe Liard
     */
-    public class FlyweightMapStorage : AreaCodeMapStorageStrategy
+    public class FlyweightMapStorage : PhonePrefixMapStorageStrategy
     {
         // Size of short and integer types in bytes.
         private static readonly int ShortNumBytes = sizeof(short);
@@ -71,7 +73,11 @@ namespace PhoneNumbers
             return descriptionPool[indexInDescriptionPool];
         }
 
+#if !NET35
+        public override void ReadFromSortedMap(ImmutableSortedDictionary<int, string> areaCodeMap)
+#else
         public override void ReadFromSortedMap(SortedDictionary<int, string> areaCodeMap)
+#endif
         {
             var descriptionsSet = new HashSet<string>();
             NumOfEntries = areaCodeMap.Count;
@@ -92,15 +98,25 @@ namespace PhoneNumbers
                 index++;
             }
             PossibleLengths.Clear();
-            PossibleLengths.AddRange(possibleLengthsSet);
-            PossibleLengths.Sort();
+            PossibleLengths.UnionWith(possibleLengthsSet);
             CreateDescriptionPool(descriptionsSet, areaCodeMap);
+        }
+
+        public override void WriteExternal(Stream stream)
+        {
+            using var writer = new BinaryWriter(stream);
+        }
+
+        public override void ReadExternal(Stream stream)
+        {
+            using var reader = new BinaryReader(stream);
         }
 
         /**
         * Creates the description pool from the provided set of string descriptions and area code map.
         */
-        private void CreateDescriptionPool(HashSet<string> descriptionsSet, SortedDictionary<int, string> areaCodeMap)
+        private void CreateDescriptionPool(ICollection<string> descriptionsSet,
+            IReadOnlyDictionary<int, string> areaCodeMap)
         {
             // Create the description pool.
             descIndexSizeInBytes = GetOptimalNumberOfBytesForValue(descriptionsSet.Count - 1);

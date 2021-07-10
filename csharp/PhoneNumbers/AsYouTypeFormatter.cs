@@ -709,7 +709,7 @@ namespace PhoneNumbers
         {
             // Note that formattingTemplate is not guaranteed to have a value, it could be empty, e.g.
             // when the next digit is entered after extracting an IDD or NDD.
-            for (int i = 0; i < formattingTemplate.Length; i++)
+            for (var i = 0; i < formattingTemplate.Length; i++)
             {
                 if (formattingTemplate[i] == DIGIT_PLACEHOLDER)
                 {

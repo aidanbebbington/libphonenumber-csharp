@@ -243,18 +243,18 @@ namespace PhoneNumbers.Test
         [Fact]
         public void TestIsLatinLetter()
         {
-            Assert.True(PhoneNumberMatcher.IsLatinLetter('c'));
-            Assert.True(PhoneNumberMatcher.IsLatinLetter('C'));
-            Assert.True(PhoneNumberMatcher.IsLatinLetter('\u00C9'));
-            Assert.True(PhoneNumberMatcher.IsLatinLetter('\u0301'));  // Combining acute accent
+            Assert.True(PhoneNumberMatcher.IsLatinLetterInternal('c'));
+            Assert.True(PhoneNumberMatcher.IsLatinLetterInternal('C'));
+            Assert.True(PhoneNumberMatcher.IsLatinLetterInternal('\u00C9'));
+            Assert.True(PhoneNumberMatcher.IsLatinLetterInternal('\u0301'));  // Combining acute accent
             // Punctuation, digits and white-space are not considered "latin letters".
-            Assert.False(PhoneNumberMatcher.IsLatinLetter(':'));
-            Assert.False(PhoneNumberMatcher.IsLatinLetter('5'));
-            Assert.False(PhoneNumberMatcher.IsLatinLetter('-'));
-            Assert.False(PhoneNumberMatcher.IsLatinLetter('.'));
-            Assert.False(PhoneNumberMatcher.IsLatinLetter(' '));
-            Assert.False(PhoneNumberMatcher.IsLatinLetter('\u6211'));  // Chinese character
-            Assert.False(PhoneNumberMatcher.IsLatinLetter('\u306E'));  // Hiragana letter no
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal(':'));
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal('5'));
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal('-'));
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal('.'));
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal(' '));
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal('\u6211'));  // Chinese character
+            Assert.False(PhoneNumberMatcher.IsLatinLetterInternal('\u306E'));  // Hiragana letter no
         }
 
         [Fact]

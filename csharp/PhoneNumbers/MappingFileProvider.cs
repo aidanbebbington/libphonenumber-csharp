@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -59,7 +61,11 @@ namespace PhoneNumbers
          *     files are available for the specific country calling code. The map is sorted in ascending
          *     order of the country calling codes as integers.
          */
+#if !NET35
+        public void ReadFileConfigs(ImmutableSortedDictionary<int, ImmutableHashSet<string>> availableDataFiles)
+#else
         public void ReadFileConfigs(SortedDictionary<int, HashSet<string>> availableDataFiles)
+#endif
         {
             numOfEntries = availableDataFiles.Count;
             countryCallingCodes = new int[numOfEntries];
@@ -120,7 +126,9 @@ namespace PhoneNumbers
                 if (languageCode.Length > 0)
                 {
                     var fileName = new StringBuilder();
-                    fileName.Append(languageCode).Append('.').Append(countryCallingCode).Append(".txt");
+                    //fileName.Append(languageCode).Append('.').Append(countryCallingCode).Append(".txt");
+                    // don't break the world
+                    fileName.Append(countryCallingCode).Append("_").Append(languageCode);
                     return fileName.ToString();
                 }
             }
@@ -179,6 +187,24 @@ namespace PhoneNumbers
         {
             if (subsequentLocalePart.Length > 0)
                 fullLocale.Append('_').Append(subsequentLocalePart);
+        }
+
+        public void ReadExternal(Stream stream)
+        {
+            using var reader = new BinaryReader(stream);
+            var l = reader.ReadBytes((int) stream.Length);
+            var dic = new Dictionary<int, ImmutableHashSet<string>>
+            {
+                {1650, new[] {"en"}.ToImmutableHashSet()},
+                {244, new[] {"en"}.ToImmutableHashSet()},
+                {44, new[] {"en", "sv"}.ToImmutableHashSet()},
+            }.ToImmutableSortedDictionary();
+            ReadFileConfigs(dic);
+        }
+
+        public void WriteExternal(Stream stream)
+        {
+            throw new NotImplementedException();
         }
     }
 }

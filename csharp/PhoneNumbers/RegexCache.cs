@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace PhoneNumbers
@@ -69,8 +70,10 @@ namespace PhoneNumbers
             }
         }
 
-        // This method is used for testing.
-        public bool ContainsRegex(string regex)
+        [Obsolete("This method was public to be @VisibleForTesting, it will be moved to internal in a future release.")]
+        public bool ContainsRegex(string regex) => ContainsRegexInternal(regex);
+
+        internal bool ContainsRegexInternal(string regex)
         {
             lock (regexLock)
             {

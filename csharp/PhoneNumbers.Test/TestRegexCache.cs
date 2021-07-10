@@ -36,20 +36,20 @@ namespace PhoneNumbers.Test
             const string regex3 = "[1-3][58]";
 
             regexCache.GetPatternForRegex(regex1);
-            Assert.True(regexCache.ContainsRegex(regex1));
+            Assert.True(regexCache.ContainsRegexInternal(regex1));
 
             regexCache.GetPatternForRegex(regex2);
-            Assert.True(regexCache.ContainsRegex(regex2));
-            Assert.True(regexCache.ContainsRegex(regex1));
+            Assert.True(regexCache.ContainsRegexInternal(regex2));
+            Assert.True(regexCache.ContainsRegexInternal(regex1));
 
             regexCache.GetPatternForRegex(regex1);
-            Assert.True(regexCache.ContainsRegex(regex1));
+            Assert.True(regexCache.ContainsRegexInternal(regex1));
 
             regexCache.GetPatternForRegex(regex3);
-            Assert.True(regexCache.ContainsRegex(regex3));
+            Assert.True(regexCache.ContainsRegexInternal(regex3));
 
-            Assert.False(regexCache.ContainsRegex(regex2));
-            Assert.True(regexCache.ContainsRegex(regex1));
+            Assert.False(regexCache.ContainsRegexInternal(regex2));
+            Assert.True(regexCache.ContainsRegexInternal(regex1));
         }
     }
 }

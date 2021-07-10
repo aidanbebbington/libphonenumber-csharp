@@ -31,14 +31,14 @@ namespace PhoneNumbers
         private static class AlternateFormats
         {
             public static readonly Dictionary<int, PhoneMetadata> Map =
-                BuildMetadataFromXml.BuildPhoneMetadata("PhoneNumberAlternateFormats.xml", isAlternateFormatsMetadata: true).MetadataList.ToDictionary(m => m.CountryCode);
+                BuildMetadataFromXml.BuildPhoneMetadataCollection("PhoneNumberAlternateFormats.xml", isAlternateFormatsMetadata: true).MetadataList.ToDictionary(m => m.CountryCode);
         }
 
         private static class ShortNumber
         {
             // A mapping from a region code to the short number metadata for that region code.
             public static readonly Dictionary<string, PhoneMetadata> MetadataMap =
-                BuildMetadataFromXml.BuildPhoneMetadata("ShortNumberMetadata.xml", isShortNumberMetadata: true).MetadataList.ToDictionary(m => m.Id);
+                BuildMetadataFromXml.BuildPhoneMetadataCollection("ShortNumberMetadata.xml", isShortNumberMetadata: true).MetadataList.ToDictionary(m => m.Id);
         }
 
         public static PhoneMetadata GetAlternateFormatsForCountry(int countryCallingCode)

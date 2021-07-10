@@ -1410,32 +1410,32 @@ namespace PhoneNumbers.Test
         [Fact]
         public void TestIsViablePhoneNumber()
         {
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("1"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("1"));
             // Only one or two digits before strange non-possible punctuation.
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("1+1+1"));
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("80+0"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("1+1+1"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("80+0"));
              // Two digits is viable.
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("00"));
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("111"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("00"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("111"));
             // Alpha numbers.
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("0800-4-pizza"));
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("0800-4-PIZZA"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("0800-4-pizza"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("0800-4-PIZZA"));
             // We need at least three digits before any alpha characters.
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("08-PIZZA"));
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("8-PIZZA"));
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("12. March"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("08-PIZZA"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("8-PIZZA"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("12. March"));
         }
 
         [Fact]
         public void TestIsViablePhoneNumberNonAscii()
         {
             // Only one or two digits before possible punctuation followed by more digits.
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("1\u300034"));
-            Assert.False(PhoneNumberUtil.IsViablePhoneNumber("1\u30003+4"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("1\u300034"));
+            Assert.False(PhoneNumberUtil.IsViablePhoneNumberInternal("1\u30003+4"));
             // Unicode variants of possible starting character and other allowed punctuation/digits.
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("\uFF081\uFF09\u30003456789"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("\uFF081\uFF09\u30003456789"));
             // Testing a leading + is okay.
-            Assert.True(PhoneNumberUtil.IsViablePhoneNumber("+1\uFF09\u30003456789"));
+            Assert.True(PhoneNumberUtil.IsViablePhoneNumberInternal("+1\uFF09\u30003456789"));
         }
 
         [Fact]
@@ -1473,28 +1473,28 @@ namespace PhoneNumbers.Test
                 .BuildPartial();
             var numberToStrip = new StringBuilder("34356778");
             var strippedNumber = "356778";
-            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(numberToStrip, metadata, null));
+            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(numberToStrip, metadata, null));
             Assert.Equal(strippedNumber, numberToStrip.ToString());
             // Retry stripping - now the number should not start with the national prefix, so no more
             // stripping should occur.
-            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(numberToStrip, metadata, null));
+            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(numberToStrip, metadata, null));
             Assert.Equal(strippedNumber, numberToStrip.ToString());
             // Some countries have no national prefix. Repeat test with none specified.
             metadata = Update(metadata).SetNationalPrefixForParsing("").BuildPartial();
-            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(numberToStrip, metadata, null));
+            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(numberToStrip, metadata, null));
             Assert.Equal(strippedNumber, numberToStrip.ToString());
             // If the resultant number doesn't match the national rule, it shouldn't be stripped.
             metadata = Update(metadata).SetNationalPrefixForParsing("3").BuildPartial();
             numberToStrip = new StringBuilder("3123");
             strippedNumber = "3123";
-            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(numberToStrip, metadata, null));
+            Assert.False(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(numberToStrip, metadata, null));
             Assert.Equal(strippedNumber, numberToStrip.ToString());
             // Test extracting carrier selection code.
             metadata = Update(metadata).SetNationalPrefixForParsing("0(81)?").BuildPartial();
             numberToStrip = new StringBuilder("08122123456");
             strippedNumber = "22123456";
             var carrierCode = new StringBuilder();
-            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(
+            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(
                 numberToStrip, metadata, carrierCode));
             Assert.Equal("81", carrierCode.ToString());
             Assert.Equal(strippedNumber, numberToStrip.ToString());
@@ -1504,7 +1504,7 @@ namespace PhoneNumbers.Test
                 .SetNationalPrefixForParsing("0(\\d{2})").BuildPartial();
             numberToStrip = new StringBuilder("031123");
             var transformedNumber = "5315123";
-            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCode(numberToStrip, metadata, null));
+            Assert.True(phoneUtil.MaybeStripNationalPrefixAndCarrierCodeInternal(numberToStrip, metadata, null));
             Assert.Equal(transformedNumber, numberToStrip.ToString());
         }
 
@@ -1516,37 +1516,37 @@ namespace PhoneNumbers.Test
             // Note the dash is removed as part of the normalization.
             var strippedNumber = new StringBuilder("45677003898003");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_IDD,
-                phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+                phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                     internationalPrefix));
             Assert.Equal(strippedNumber.ToString(), numberToStrip.ToString());
             // Now the number no longer starts with an IDD prefix, so it should now report
             // FROM_DEFAULT_COUNTRY.
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY,
-                phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+                phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                     internationalPrefix));
 
             numberToStrip = new StringBuilder("00945677003898003");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_IDD,
-                phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+                phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                     internationalPrefix));
             Assert.Equal(strippedNumber.ToString(), numberToStrip.ToString());
             // Test it works when the international prefix is broken up by spaces.
             numberToStrip = new StringBuilder("00 9 45677003898003");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_IDD,
-                phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+                phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                     internationalPrefix));
             Assert.Equal(strippedNumber.ToString(), numberToStrip.ToString());
             // Now the number no longer starts with an IDD prefix, so it should now report
             // FROM_DEFAULT_COUNTRY.
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY,
-                phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+                phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                     internationalPrefix));
 
             // Test the + symbol is also recognised and stripped.
             numberToStrip = new StringBuilder("+45677003898003");
             strippedNumber = new StringBuilder("45677003898003");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN,
-            phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+            phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                                                          internationalPrefix));
             Assert.Equal(strippedNumber.ToString(), numberToStrip.ToString());
 
@@ -1555,13 +1555,13 @@ namespace PhoneNumbers.Test
             numberToStrip = new StringBuilder("0090112-3123");
             strippedNumber = new StringBuilder("00901123123");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY,
-            phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+            phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                                                          internationalPrefix));
             Assert.Equal(strippedNumber.ToString(), numberToStrip.ToString());
             // Here the 0 is separated by a space from the IDD.
             numberToStrip = new StringBuilder("009 0-112-3123");
             Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY,
-            phoneUtil.MaybeStripInternationalPrefixAndNormalize(numberToStrip,
+            phoneUtil.MaybeStripInternationalPrefixAndNormalizeInternal(numberToStrip,
                                                          internationalPrefix));
         }
 
@@ -1578,7 +1578,7 @@ namespace PhoneNumbers.Test
                 var countryCallingCode = 1;
                 var numberToFill = new StringBuilder();
                 Assert.Equal(countryCallingCode,
-                    phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true, number));
+                    phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true, number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_IDD, number.CountryCodeSource);
                 // Should strip and normalize national significant number.
                 Assert.Equal(strippedNumber,
@@ -1595,7 +1595,7 @@ namespace PhoneNumbers.Test
                 var countryCallingCode = 64;
                 var numberToFill = new StringBuilder();
                 Assert.Equal(countryCallingCode,
-                    phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true, number));
+                    phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true, number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN, number.CountryCodeSource);
             }
             catch (NumberParseException)
@@ -1609,7 +1609,7 @@ namespace PhoneNumbers.Test
                 var countryCallingCode = 800;
                 var numberToFill = new StringBuilder();
                 Assert.Equal(countryCallingCode,
-                   phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true, number));
+                   phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true, number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITH_PLUS_SIGN, number.CountryCodeSource);
             }
             catch (NumberParseException)
@@ -1622,7 +1622,7 @@ namespace PhoneNumbers.Test
                 var phoneNumber = "2345-6789";
                 var numberToFill = new StringBuilder();
                 Assert.Equal(0,
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true, number));
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true, number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY, number.CountryCodeSource);
             }
             catch (NumberParseException)
@@ -1634,7 +1634,7 @@ namespace PhoneNumbers.Test
             {
                 var phoneNumber = "0119991123456789";
                 var numberToFill = new StringBuilder();
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true, number);
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true, number);
                 Assert.True(false);
             }
             catch (NumberParseException e)
@@ -1650,7 +1650,7 @@ namespace PhoneNumbers.Test
                 var countryCallingCode = 1;
                 var numberToFill = new StringBuilder();
                 Assert.Equal(countryCallingCode,
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true,
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true,
                 number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_NUMBER_WITHOUT_PLUS_SIGN,
                 number.CountryCodeSource);
@@ -1666,7 +1666,7 @@ namespace PhoneNumbers.Test
                 var countryCallingCode = 1;
                 var numberToFill = new StringBuilder();
                 Assert.Equal(countryCallingCode,
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, false,
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, false,
                 number));
                 Assert.False(number.HasCountryCodeSource, "Should not contain CountryCodeSource.");
             }
@@ -1680,7 +1680,7 @@ namespace PhoneNumbers.Test
                 var phoneNumber = "(1 610) 619 446";
                 var numberToFill = new StringBuilder();
                 Assert.Equal(0,
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, false,
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, false,
                 number));
                 Assert.False(number.HasCountryCodeSource, "Should not contain CountryCodeSource.");
             }
@@ -1694,7 +1694,7 @@ namespace PhoneNumbers.Test
                 var phoneNumber = "(1 610) 619";
                 var numberToFill = new StringBuilder();
                 Assert.Equal(0,
-                phoneUtil.MaybeExtractCountryCode(phoneNumber, metadata, numberToFill, true,
+                phoneUtil.MaybeExtractCountryCodeInternal(phoneNumber, metadata, numberToFill, true,
                 number));
                 Assert.Equal(PhoneNumber.Types.CountryCodeSource.FROM_DEFAULT_COUNTRY, number.CountryCodeSource);
             }

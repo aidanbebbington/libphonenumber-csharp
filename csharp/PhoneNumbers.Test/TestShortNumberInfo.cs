@@ -429,7 +429,7 @@ namespace PhoneNumbers.Test
                     Parse("+4640404", RegionCode.SE), RegionCode.US));
         }
 
-        private PhoneNumber Parse(String number, String regionCode)
+        private PhoneNumber Parse(string number, string regionCode)
         {
             try
             {
